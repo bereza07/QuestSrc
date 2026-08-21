@@ -1,0 +1,30 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for the main QuestForge window.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "sql:allow-load",
+      "allow": [{ "path": "sqlite:questforge.db" }]
+    },
+    {
+      "identifier": "sql:allow-execute",
+      "allow": [{ "path": "sqlite:questforge.db" }]
+    },
+    {
+      "identifier": "sql:allow-select",
+      "allow": [{ "path": "sqlite:questforge.db" }]
+    },
+    "sql:allow-close",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://api.deepseek.com/*" },
+        { "url": "https://api.openai.com/*" },
+        { "url": "https://api.anthropic.com/*" }
+      ]
+    }
+  ]
+}

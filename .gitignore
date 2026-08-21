@@ -1,0 +1,25 @@
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.env.local
+.env.*.local
+*.log
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local scratch
+.figma-import/
+scratchpad/
