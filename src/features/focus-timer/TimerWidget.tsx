@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useTimerStore } from "@/stores/timerStore";
 import { useT } from "@/i18n";
-import { ProgressBar } from "@/components/ProgressBar";
-import { IconPlay, IconPause, IconStop, IconClock } from "@/components/icons";
+import { IconPlay, IconPause, IconStop, IconRotateCCW } from "@/components/icons";
 import { secondsToClock } from "@/utils/date";
 import type { TimerMode } from "@/types";
 import { SessionCompleteModal } from "./SessionCompleteModal";
 import { FocusHistoryModal } from "./FocusHistoryModal";
+
+// Compact focus-timer widget with a circular progress ring, inline-editable
+// duration, and a task selector for the session. Fits into the dashboard card
+// (~320px wide) and grows gracefully on wider surfaces.
 
 const POMODORO_PRESETS = [25, 50, 90];
 
@@ -27,22 +30,31 @@ export function TimerWidget() {
   const justCompleted = useTimerStore((s) => s.justCompletedSession);
   const lastSessionId = useTimerStore((s) => s.lastSessionId);
 
-  const [mode, setMode] = useState<TimerMode>("STOPWATCH");
-  const [pomodoro, setPomodoro] = useState(50);
-  const [countdownMin, setCountdownMin] = useState(30);
+  const [mode, setMode] = useState<TimerMode>("POMODORO");
+  const [pomodoro, setPomodoro] = useState(25);
+  const [countdownMin, setCountdownMin] = useState(45);
   const [pickTaskId, setPickTaskId] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editStr, setEditStr] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Surface the post-session form when a timer stops with a saved session.
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
   if ((justCompleted || (!active && lastSessionId)) && !showComplete) {
     setShowComplete(true);
   }
 
+  const isTimed = mode === "POMODORO" || mode === "COUNTDOWN";
+  const currentMin = mode === "POMODORO" ? pomodoro : countdownMin;
+  const setCurrentMin = mode === "POMODORO" ? setPomodoro : setCountdownMin;
+
   function beginTimer() {
     const picked = activeTasks.find((task) => task.id === pickTaskId);
-    const target =
-      mode === "POMODORO" ? pomodoro * 60 : mode === "COUNTDOWN" ? countdownMin * 60 : null;
+    const target = mode === "POMODORO" ? pomodoro * 60 : mode === "COUNTDOWN" ? countdownMin * 60 : null;
     void start({
       taskId: picked?.id ?? null,
       projectId: picked?.projectId ?? null,
@@ -53,14 +65,50 @@ export function TimerWidget() {
 
   const runningTask = activeTasks.find((task) => task.id === taskId);
   const remaining = targetSeconds ? Math.max(0, targetSeconds - focusedSeconds) : null;
-  const clock = remaining != null ? remaining : focusedSeconds;
-  const frac = targetSeconds ? focusedSeconds / targetSeconds : 0;
+  const clockSeconds = active
+    ? remaining ?? focusedSeconds
+    : isTimed
+      ? currentMin * 60
+      : 0;
+  const totalSeconds = active
+    ? targetSeconds ?? focusedSeconds
+    : isTimed
+      ? currentMin * 60
+      : 0;
+  const progress = totalSeconds > 0
+    ? Math.min(1, active ? focusedSeconds / totalSeconds : 0)
+    : 0;
+
+  // SVG ring geometry — matches the Figma mock's 120px canvas.
+  const R = 52;
+  const circumference = 2 * Math.PI * R;
+  const offset = circumference * (1 - progress);
+
+  function commitEdit() {
+    const n = Math.max(1, Math.min(600, Math.round(Number(editStr) || currentMin)));
+    setCurrentMin(n);
+    setEditing(false);
+  }
 
   return (
-    <div className="qf-card p-5">
+    <div className="flex flex-col gap-4">
+      {/* Mode tabs — segmented pills. Disabled while a session is active. */}
       <div className="flex items-center justify-between">
-        <div className="qf-label flex items-center gap-2">
-          <IconClock size={14} /> {t("timer.title")}
+        <div className="inline-flex rounded-md bg-surface-2 p-0.5 text-xs">
+          {(["STOPWATCH", "POMODORO", "COUNTDOWN"] as TimerMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => !active && setMode(m)}
+              disabled={active}
+              className={`rounded px-2.5 py-1 transition-colors ${
+                mode === m
+                  ? "bg-surface text-fg shadow-sm"
+                  : "text-fg-2 hover:text-fg disabled:opacity-50"
+              }`}
+            >
+              {t(`timer.${m.toLowerCase()}`)}
+            </button>
+          ))}
         </div>
         <button
           className="text-xs text-fg-3 hover:text-fg"
@@ -70,114 +118,150 @@ export function TimerWidget() {
         </button>
       </div>
 
-      {active ? (
-        <div className="mt-3 text-center">
-          <div className="truncate text-sm text-fg-2">
-            {runningTask ? runningTask.title : t("timer.freeFocus")}
-          </div>
-          <div
-            className={`mt-1 font-mono text-4xl tabular-nums ${
-              running ? "text-accent" : "text-fg-3"
-            }`}
-          >
-            {secondsToClock(clock)}
-          </div>
-          {targetSeconds && <ProgressBar className="mx-auto mt-2 max-w-xs" value={frac} height={5} />}
-          <div className="mt-3 flex justify-center gap-2">
-            {running ? (
-              <button className="qf-btn-ghost" onClick={() => void pause()}>
-                <IconPause size={14} /> {t("timer.pause")}
-              </button>
-            ) : (
-              <button className="qf-btn-primary" onClick={() => void resume()}>
-                <IconPlay size={14} /> {t("timer.resume")}
-              </button>
+      {/* Ring + clock. Ring is the SVG, clock lives centered on top; the whole
+          area is clickable when idle+timed to enter edit mode. */}
+      <div className="flex items-center justify-center">
+        <div className="relative h-[120px] w-[120px]">
+          <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+            <circle
+              cx="60"
+              cy="60"
+              r={R}
+              fill="none"
+              stroke="var(--border-c)"
+              strokeWidth="6"
+            />
+            {totalSeconds > 0 && (
+              <circle
+                cx="60"
+                cy="60"
+                r={R}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                style={{ transition: "stroke-dashoffset 0.6s ease" }}
+              />
             )}
-            <button className="qf-btn-danger" onClick={() => void stop()}>
-              <IconStop size={14} /> {t("timer.stop")}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3">
-          <div className="inline-flex rounded-lg border border-border p-1">
-            {(["STOPWATCH", "POMODORO", "COUNTDOWN"] as TimerMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`rounded-md px-3 py-1 text-xs ${
-                  mode === m ? "bg-accent text-accent-fg" : "text-fg-2 hover:text-fg"
-                }`}
-              >
-                {t(`timer.${m.toLowerCase()}`)}
-              </button>
-            ))}
-          </div>
-
-          {mode === "POMODORO" && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {POMODORO_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPomodoro(p)}
-                  className={`rounded-md border px-3 py-1 text-xs ${
-                    pomodoro === p
-                      ? "border-accent text-accent"
-                      : "border-border text-fg-2"
-                  }`}
-                >
-                  {p} {t("timer.minutes")}
-                </button>
-              ))}
-              <span className="text-fg-3">·</span>
+          </svg>
+          <button
+            type="button"
+            disabled={active || !isTimed}
+            onClick={() => {
+              setEditStr(String(currentMin));
+              setEditing(true);
+            }}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 disabled:cursor-default"
+            title={isTimed && !active ? t("timer.editMinutes") : undefined}
+          >
+            {editing ? (
               <input
+                ref={inputRef}
                 type="number"
                 min={1}
                 max={600}
-                value={pomodoro}
-                onChange={(e) =>
-                  setPomodoro(Math.max(1, Math.min(600, Number(e.target.value) || 1)))
-                }
-                aria-label={t("timer.customMinutes")}
-                title={t("timer.customMinutes")}
-                className={`qf-input w-20 ${
-                  POMODORO_PRESETS.includes(pomodoro) ? "" : "border-accent text-accent"
+                value={editStr}
+                onChange={(e) => setEditStr(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitEdit();
+                  if (e.key === "Escape") setEditing(false);
+                }}
+                className="w-20 border-0 bg-transparent text-center font-mono text-3xl font-medium text-accent outline-none"
+              />
+            ) : (
+              <span
+                className={`font-mono text-2xl font-medium tabular-nums ${
+                  running ? "text-accent" : "text-fg"
                 }`}
-              />
-              <span className="text-xs text-fg-3">{t("timer.minutes")}</span>
-            </div>
-          )}
-          {mode === "COUNTDOWN" && (
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                value={countdownMin}
-                onChange={(e) => setCountdownMin(Number(e.target.value) || 1)}
-                className="qf-input w-24"
-              />
-              <span className="text-xs text-fg-3">{t("timer.minutes")}</span>
-            </div>
-          )}
-
-          <select
-            value={pickTaskId}
-            onChange={(e) => setPickTaskId(e.target.value)}
-            className="qf-input mt-3"
-          >
-            <option value="">{t("timer.freeFocus")}</option>
-            {activeTasks.map((task) => (
-              <option key={task.id} value={task.id}>
-                {task.title}
-              </option>
-            ))}
-          </select>
-
-          <button className="qf-btn-primary mt-3 w-full justify-center" onClick={beginTimer}>
-            <IconPlay size={15} /> {t("timer.start")}
+              >
+                {secondsToClock(clockSeconds)}
+              </span>
+            )}
+            {!active && isTimed && !editing && (
+              <span className="text-[10px] uppercase tracking-wider text-fg-3">
+                {t("timer.tapToEdit")}
+              </span>
+            )}
           </button>
         </div>
+      </div>
+
+      {/* Pomodoro presets — visible only when setting up a timed session. */}
+      {!active && mode === "POMODORO" && (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {POMODORO_PRESETS.map((p) => (
+            <button
+              key={p}
+              onClick={() => setPomodoro(p)}
+              className={`rounded-md border px-2 py-0.5 text-[11px] transition-colors ${
+                pomodoro === p
+                  ? "border-accent bg-accent-bg text-accent"
+                  : "border-border text-fg-2 hover:text-fg"
+              }`}
+            >
+              {p} {t("timer.minutesShort")}
+            </button>
+          ))}
+        </div>
       )}
+
+      {/* Task selector — shown always so the running task is visible too. */}
+      {active ? (
+        <div className="rounded-md bg-surface-2 px-2.5 py-1.5 text-center text-xs text-fg-2">
+          {runningTask ? runningTask.title : t("timer.freeFocus")}
+        </div>
+      ) : (
+        <select
+          value={pickTaskId}
+          onChange={(e) => setPickTaskId(e.target.value)}
+          className="qf-input text-sm"
+        >
+          <option value="">{t("timer.freeFocus")}</option>
+          {activeTasks.map((task) => (
+            <option key={task.id} value={task.id}>
+              {task.title}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Controls */}
+      <div className="flex justify-center gap-1.5">
+        {!active ? (
+          <button className="qf-btn-primary flex-1 justify-center" onClick={beginTimer}>
+            <IconPlay size={13} /> {t("timer.start")}
+          </button>
+        ) : (
+          <>
+            {running ? (
+              <button className="qf-btn-ghost flex-1 justify-center" onClick={() => void pause()}>
+                <IconPause size={13} /> {t("timer.pause")}
+              </button>
+            ) : (
+              <button className="qf-btn-primary flex-1 justify-center" onClick={() => void resume()}>
+                <IconPlay size={13} /> {t("timer.resume")}
+              </button>
+            )}
+            <button
+              className="qf-btn-ghost"
+              onClick={() => void stop()}
+              title={t("timer.stop")}
+            >
+              <IconStop size={13} />
+            </button>
+            <button
+              className="qf-btn-ghost"
+              onClick={() => void stop()}
+              title={t("timer.reset")}
+            >
+              <IconRotateCCW size={13} />
+            </button>
+          </>
+        )}
+      </div>
 
       {showComplete && (
         <SessionCompleteModal

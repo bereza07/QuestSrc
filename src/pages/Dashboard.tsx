@@ -26,12 +26,27 @@ export function Dashboard() {
   const repos = useAppStore((s) => s.repos);
 
   const [activity, setActivity] = useState<Map<string, DailyActivity>>(new Map());
+  // Real quest-completion progress for the main goal (done / total). Fetched
+  // once per mount + when repos changes; the number is stable enough that we
+  // don't refresh it on every task tick.
+  const [mainQuestProgress, setMainQuestProgress] = useState<{ done: number; total: number } | null>(null);
   useEffect(() => {
     if (!repos) return;
     void repos.activity.listRecent(14).then((rows) => {
       setActivity(new Map(rows.map((r) => [r.date, r])));
     });
-  }, [repos]);
+    if (mainQuest) {
+      void repos.goals.progressByGoal().then((map) => {
+        setMainQuestProgress(map.get(mainQuest.id) ?? { done: 0, total: 0 });
+      });
+    } else {
+      setMainQuestProgress(null);
+    }
+  }, [repos, mainQuest]);
+
+  const mqPct = mainQuestProgress && mainQuestProgress.total > 0
+    ? Math.round((mainQuestProgress.done / mainQuestProgress.total) * 100)
+    : 0;
 
   const last14 = useMemo(() => {
     const today = todayKey();
@@ -99,29 +114,51 @@ export function Dashboard() {
                 <div className="text-sm text-fg-3">{t("dashboard.noMainQuest")}</div>
               )}
             </div>
-            {mainQuest && (
-              <Link
-                to="/goals"
-                className="shrink-0 text-xs text-accent hover:underline"
-              >
-                {t("common.manage")}
-              </Link>
+            {mainQuest && mainQuestProgress && (
+              <div className="shrink-0 text-right">
+                <div className="font-mono text-2xl font-semibold text-fg">
+                  {mqPct}
+                  <span className="text-base text-fg-3">%</span>
+                </div>
+                <div className="mt-0.5 text-xs text-fg-3">
+                  {mainQuestProgress.done}/{mainQuestProgress.total} {t("dashboard.doneShort")}
+                </div>
+              </div>
             )}
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
-            <div
-              className="h-full rounded-full transition-[width] duration-500"
-              style={{
-                width: `${Math.round(levelProgressFraction(progress) * 100)}%`,
-                background: "var(--accent)",
-              }}
-            />
-          </div>
+          {mainQuest && (
+            <>
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div
+                  className="h-full rounded-full transition-[width] duration-500"
+                  style={{
+                    width: `${mqPct}%`,
+                    background: "var(--accent)",
+                  }}
+                />
+              </div>
+              {mainQuest.deadline && (
+                <div className="mt-2 text-xs text-fg-3">
+                  {t("dashboard.dueOn", {
+                    date: new Date(mainQuest.deadline).toLocaleDateString(lang, {
+                      month: "short",
+                      day: "numeric",
+                    }),
+                  })}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Character card — spans two rows on the right. */}
         <div className="qf-card row-span-2 p-5">
-          <div className="mb-5 flex items-center gap-3">
+          {/* Clickable — jumps to the Character page. */}
+          <Link
+            to="/character"
+            className="mb-5 flex items-center gap-3 rounded-md -m-1 p-1 transition-colors hover:bg-surface-2"
+            title={t("nav.character")}
+          >
             <div
               className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-lg text-xl font-semibold text-accent-fg"
               style={{ background: "var(--accent)" }}
@@ -138,7 +175,7 @@ export function Dashboard() {
                 <div className="truncate text-xs text-fg-2">{character.characterClass}</div>
               )}
             </div>
-          </div>
+          </Link>
 
           <div className="space-y-3">
             <div>

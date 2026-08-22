@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useT, useI18nStore } from "@/i18n";
 import { TaskItem } from "@/components/TaskItem";
+import { Collapse } from "@/components/Collapse";
 import { IconPlus, IconSearch, IconChevronDown } from "@/components/icons";
 import { DIFFICULTIES, type Difficulty, type StatReward } from "@/types";
 import { XP_BANDS, totalXpFromRewards, normalizeStatRewards } from "@/domain/xp";
@@ -93,7 +94,9 @@ export function Tasks() {
         </select>
       </div>
 
-      {showForm && <NewQuestForm onDone={() => setShowForm(false)} />}
+      <Collapse open={showForm}>
+        <NewQuestForm onDone={() => setShowForm(false)} />
+      </Collapse>
 
       {overdue.length > 0 && <OverdueSection tasks={overdue} />}
 
@@ -135,13 +138,13 @@ function QuestGroup({ label, tasks }: { label: string; tasks: import("@/types").
           {tasks.length}
         </span>
       </button>
-      {open && (
+      <Collapse open={open}>
         <div>
           {tasks.map((task) => (
             <TaskItem key={task.id} task={task} />
           ))}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

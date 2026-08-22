@@ -92,6 +92,7 @@
 
   .qf-card {
     @apply bg-surface border border-border rounded-lg;
+    transition: background-color 150ms ease-out, border-color 150ms ease-out;
   }
 
   .qf-panel {

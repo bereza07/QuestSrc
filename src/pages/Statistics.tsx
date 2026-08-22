@@ -34,7 +34,23 @@ export function Statistics() {
   const [anchor, setAnchor] = useState(todayKey());
   const [projectId, setProjectId] = useState("");
   const [goalId, setGoalId] = useState("");
-  const [res, setRes] = useState<StatisticsResult | null>(null);
+  // Start with an all-zero result so the page renders its final structure on
+  // the very first frame — no "25th frame" jitter from empty → filled remount.
+  const empty: StatisticsResult = {
+    focusedSeconds: 0,
+    focusByDay: [],
+    avgPerWorkingDaySeconds: 0,
+    workingDaysCount: 0,
+    completed: 0,
+    missed: 0,
+    cancelled: 0,
+    pending: 0,
+    completionRate: null,
+    estimate: { count: 0, avgDeltaPct: null, over: 0, under: 0, accurate: 0 },
+    sessions: { count: 0, avgSeconds: 0, longestSeconds: 0, progress: { NONE: 0, SOME: 0, COMPLETED: 0 }, avgDifficulty: null },
+    focusByProject: [],
+  };
+  const [res, setRes] = useState<StatisticsResult>(empty);
   const [activity, setActivity] = useState<Map<string, DailyActivity>>(new Map());
 
   useEffect(() => {
@@ -130,7 +146,7 @@ export function Statistics() {
         </div>
       </div>
 
-      {res && (
+      {(
         <>
           {/* Tiles */}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

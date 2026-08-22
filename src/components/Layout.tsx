@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppStore } from "@/stores/appStore";
 import { useThemeStore } from "@/stores/themeStore";
 import { useT } from "@/i18n";
@@ -32,6 +32,7 @@ const COLLAPSE_KEY = "qf.sidebar.collapsed";
 
 export function Layout() {
   const t = useT();
+  const location = useLocation();
   const character = useAppStore((s) => s.character);
   const streak = useAppStore((s) => s.streak);
   const theme = useThemeStore((s) => s.theme);
@@ -54,20 +55,23 @@ export function Layout() {
   return (
     <div className="flex h-full min-h-screen bg-bg text-fg">
       <aside
-        className="flex shrink-0 flex-col border-r border-border bg-sidebar"
+        // Width transition — 200ms is fast enough not to feel laggy but slow
+        // enough to read as motion instead of a jump.
+        className="flex shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-200 ease-out"
         style={{ width: collapsed ? 68 : 260 }}
       >
-        {/* Header: avatar + name + XP bar. Fixed min-height so collapsing the
-            streak/xp pills below never causes the header to jump. */}
-        <div
-          className={`flex items-center gap-3 border-b border-border px-4 py-4 shrink-0 ${
+        {/* Header: avatar + name + XP bar. Whole row is a Link to the Character
+            page — clicking anywhere on the identity block navigates there. */}
+        <NavLink
+          to="/character"
+          className={`flex items-center gap-3 border-b border-border px-4 py-4 shrink-0 transition-colors hover:bg-surface ${
             collapsed ? "justify-center px-2" : ""
           }`}
+          title={character?.name}
         >
           <div
             className="shrink-0 flex h-10 w-10 items-center justify-center overflow-hidden rounded-md text-sm font-semibold text-accent-fg"
             style={{ background: "var(--accent)" }}
-            title={character?.name}
           >
             {character?.avatar ? (
               <img src={character.avatar} alt="" className="h-full w-full object-cover" />
@@ -94,7 +98,7 @@ export function Layout() {
               </div>
             </div>
           )}
-        </div>
+        </NavLink>
 
         {/* Streak + total XP pills — always rendered so collapsing doesn't
             change the sidebar's vertical layout. When collapsed, we show a
@@ -202,7 +206,9 @@ export function Layout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-8 py-8">
+        {/* `key` on the route change makes the inner container remount and
+            re-run its fade-in — a subtle 150ms transition between pages. */}
+        <div key={location.pathname} className="mx-auto max-w-5xl animate-fade-in px-8 py-8">
           <Outlet />
         </div>
       </main>
