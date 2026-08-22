@@ -85,12 +85,12 @@ export function Settings() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="qf-heading text-2xl text-ink">{t("settings.title")}</h1>
+      <h1 className="text-xl font-semibold text-fg">{t("settings.title")}</h1>
 
       {/* Language */}
       <section className="qf-card mt-4 p-5">
         <div className="qf-label">{t("settings.language")}</div>
-        <label className="mt-3 block text-sm text-ink-soft">
+        <label className="mt-3 block text-sm text-fg-2">
           {t("settings.languageLabel")}
         </label>
         <div className="mt-2 inline-flex rounded-lg border border-border p-1">
@@ -100,8 +100,8 @@ export function Settings() {
               onClick={() => void changeLang(code)}
               className={`rounded-md px-4 py-1.5 text-sm transition ${
                 lang === code
-                  ? "bg-accent text-bg shadow-card"
-                  : "text-ink-soft hover:text-ink"
+                  ? "bg-accent text-accent-fg"
+                  : "text-fg-2 hover:text-fg"
               }`}
             >
               {LANG_LABELS[code]}
@@ -116,7 +116,7 @@ export function Settings() {
       {/* AI */}
       <section className="qf-card mt-6 p-5">
         <div className="qf-label">{t("settings.aiProvider")}</div>
-        <p className="mt-1 text-xs text-ink-faint">{t("settings.aiProviderBlurb")}</p>
+        <p className="mt-1 text-xs text-fg-3">{t("settings.aiProviderBlurb")}</p>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -161,7 +161,7 @@ export function Settings() {
             className="qf-input mt-1"
             autoComplete="off"
           />
-          <p className="mt-1 text-xs text-ink-faint">{t("settings.apiKeyNote")}</p>
+          <p className="mt-1 text-xs text-fg-3">{t("settings.apiKeyNote")}</p>
         </div>
 
         <div className="mt-5">
@@ -175,14 +175,14 @@ export function Settings() {
             onChange={(e) => setThoroughness(Number(e.target.value))}
             className="mt-2 w-full accent-accent"
           />
-          <div className="mt-1 flex justify-between text-[11px] text-ink-faint">
+          <div className="mt-1 flex justify-between text-[11px] text-fg-3">
             <span>{t("settings.aiThoroughnessLow")}</span>
             <span>{t("settings.aiThoroughnessHigh")}</span>
           </div>
-          <p className="mt-1 text-xs text-ink-faint">{t("settings.aiThoroughnessHint")}</p>
+          <p className="mt-1 text-xs text-fg-3">{t("settings.aiThoroughnessHint")}</p>
         </div>
 
-        <div className="mt-4 rounded-lg border border-border bg-bg-soft/40 p-3">
+        <div className="mt-4 rounded-lg border border-border bg-surface-2 p-3">
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
@@ -191,8 +191,8 @@ export function Settings() {
               className="mt-0.5 h-4 w-4"
             />
             <div className="flex-1">
-              <div className="text-sm font-medium text-ink">{t("settings.aiAgentMode")}</div>
-              <div className="mt-0.5 text-xs text-ink-faint">
+              <div className="text-sm font-medium text-fg">{t("settings.aiAgentMode")}</div>
+              <div className="mt-0.5 text-xs text-fg-3">
                 {t("settings.aiAgentModeHint")}
               </div>
             </div>
@@ -217,10 +217,10 @@ export function Settings() {
       <DataSettings />
 
       {/* Danger zone */}
-      <section className="qf-card mt-6 border-danger/30 p-5">
+      <section className="qf-card mt-6 border-danger p-5">
         <div className="qf-label text-danger">{t("settings.dangerZone")}</div>
-        <p className="mt-1 text-sm text-ink-soft">{t("settings.resetBlurb")}</p>
-        <p className="mt-3 text-xs text-ink-faint">
+        <p className="mt-1 text-sm text-fg-2">{t("settings.resetBlurb")}</p>
+        <p className="mt-3 text-xs text-fg-3">
           {t("settings.typeReset", { word: RESET_WORD })}
         </p>
         <div className="mt-2 flex gap-2">
@@ -269,9 +269,9 @@ function SoundSettings() {
   return (
     <section className="qf-card mt-6 p-5">
       <div className="qf-label">{t("settings.soundTitle")}</div>
-      <p className="mt-1 text-xs text-ink-faint">{t("settings.soundBlurb")}</p>
+      <p className="mt-1 text-xs text-fg-3">{t("settings.soundBlurb")}</p>
 
-      <label className="mt-3 flex items-center gap-2 text-sm text-ink-soft">
+      <label className="mt-3 flex items-center gap-2 text-sm text-fg-2">
         <input
           type="checkbox"
           checked={cfg.enabled}
@@ -284,7 +284,7 @@ function SoundSettings() {
       </label>
 
       <div className="mt-3 flex items-center gap-3">
-        <span className="text-xs text-ink-faint">{t("settings.soundVolume")}</span>
+        <span className="text-xs text-fg-3">{t("settings.soundVolume")}</span>
         <input
           type="range"
           min={0}
@@ -302,7 +302,7 @@ function SoundSettings() {
       <div className="mt-4 space-y-2">
         {SOUND_EVENTS.map((ev) => (
           <div key={ev} className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-ink-soft">
+            <span className="text-fg-2">
               {t(`settings.sound_${ev}`)}
               {soundService.hasCustom(ev) && (
                 <span className="ml-2 text-[10px] uppercase text-accent">•</span>
@@ -393,7 +393,7 @@ function SyncSettings() {
   return (
     <section className="qf-card mt-6 p-5">
       <div className="qf-label">{t("settings.syncTitle")}</div>
-      <p className="mt-1 text-xs text-ink-faint">{t("settings.syncBlurb")}</p>
+      <p className="mt-1 text-xs text-fg-3">{t("settings.syncBlurb")}</p>
 
       <label className="qf-label mt-4 block">{t("settings.syncServerUrl")}</label>
       <input
@@ -406,7 +406,7 @@ function SyncSettings() {
         className="qf-input mt-1"
         disabled={!!sync.token}
       />
-      <p className="mt-1 text-[11px] leading-relaxed text-ink-faint">
+      <p className="mt-1 text-[11px] leading-relaxed text-fg-3">
         {t("settings.syncServerHint")}
       </p>
       {!sync.token && (
@@ -465,17 +465,17 @@ function SyncSettings() {
         </>
       ) : (
         <>
-          <div className="mt-3 text-sm text-ink">
+          <div className="mt-3 text-sm text-fg">
             {t("settings.syncSignedInAs", { email: sync.email ?? "" })}
           </div>
-          <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-ink-soft">
+          <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-fg-2">
             <input
               type="checkbox"
               checked={sync.autoSync}
               onChange={(e) => sync.setAutoSync(e.target.checked)}
             />
             {t("settings.syncAutoSync")}
-            <span className="text-xs text-ink-faint">— {t("settings.syncAutoSyncHint")}</span>
+            <span className="text-xs text-fg-3">— {t("settings.syncAutoSyncHint")}</span>
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="qf-btn-primary" onClick={doPush} disabled={sync.status === "syncing"}>
@@ -488,7 +488,7 @@ function SyncSettings() {
               {t("settings.syncLogout")}
             </button>
           </div>
-          <div className="mt-2 text-xs text-ink-faint">
+          <div className="mt-2 text-xs text-fg-3">
             {t("settings.syncLastSynced", { when })}
           </div>
           <div className="mt-4 border-t border-border pt-3">
@@ -502,7 +502,7 @@ function SyncSettings() {
             >
               {t("settings.syncWipe")}
             </button>
-            <span className="mx-2 text-ink-faint">·</span>
+            <span className="mx-2 text-fg-3">·</span>
             <button
               className="text-xs text-danger hover:underline"
               onClick={async () => {
@@ -521,7 +521,7 @@ function SyncSettings() {
         <div className="mt-2 text-xs text-accent">{t("settings.syncBusy")}</div>
       )}
       {sync.error === "__CONFLICT__" ? (
-        <div className="mt-3 rounded-lg border border-warn/40 bg-warn/5 p-3 text-xs">
+        <div className="mt-3 rounded-lg border border-warn bg-warn-bg p-3 text-xs">
           <div className="text-warn">{t("settings.syncConflict")}</div>
           <div className="mt-2 flex gap-2">
             <button
@@ -616,7 +616,7 @@ function DataSettings() {
   return (
     <section className="qf-card mt-6 p-5">
       <div className="qf-label">{t("settings.dataTitle")}</div>
-      <p className="mt-1 text-xs text-ink-faint">{t("settings.dataBlurb")}</p>
+      <p className="mt-1 text-xs text-fg-3">{t("settings.dataBlurb")}</p>
       <div className="mt-3 flex gap-2">
         <button className="qf-btn-ghost" onClick={doExport}>
           {t("settings.exportBtn")}
@@ -710,8 +710,8 @@ function GoalSettings() {
               onClick={() => toggleDay(d)}
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 workDays.has(d)
-                  ? "border-accent bg-accent/15 text-accent-glow"
-                  : "border-border text-ink-faint hover:border-ink-faint"
+                  ? "border-accent bg-accent-bg text-accent"
+                  : "border-border text-fg-3 hover:border-border-strong"
               }`}
             >
               {t(`settingsGoal.weekday${d}`)}

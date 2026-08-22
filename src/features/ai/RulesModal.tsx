@@ -51,18 +51,18 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title={t("ai.rulesTitle")} onClose={onClose} wide>
-      <p className="text-xs text-ink-faint">{t("ai.rulesBlurb")}</p>
+      <p className="text-xs text-fg-3">{t("ai.rulesBlurb")}</p>
 
       <div className="mt-4 space-y-2">
         {rules.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-ink-faint">
+          <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-fg-3">
             {t("ai.rulesEmpty")}
           </div>
         )}
         {rules.map((r) => (
           <div
             key={r.id}
-            className="group flex items-start gap-2 rounded-lg border border-border bg-bg-soft/40 px-3 py-2"
+            className="group flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2"
           >
             {editingId === r.id ? (
               <>
@@ -93,7 +93,7 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
                     setEditingId(r.id);
                     setEditingText(r.text);
                   }}
-                  className="flex-1 text-left text-sm text-ink-soft hover:text-ink"
+                  className="flex-1 text-left text-sm text-fg-2 hover:text-fg"
                   title={t("common.edit")}
                 >
                   {r.text}
@@ -101,7 +101,7 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
                 <button
                   onClick={() => remove(r.id)}
                   title={t("ai.rulesRemove")}
-                  className="shrink-0 text-ink-faint opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                  className="shrink-0 text-fg-3 opacity-0 transition group-hover:opacity-100 hover:text-danger"
                 >
                   <IconTrash size={14} />
                 </button>
@@ -134,7 +134,7 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div className="mt-3 text-right text-[11px] text-ink-faint">
+      <div className="mt-3 text-right text-[11px] text-fg-3">
         {t("ai.rulesCount", { count: rules.length })}
       </div>
     </Modal>

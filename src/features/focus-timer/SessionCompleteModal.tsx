@@ -36,10 +36,10 @@ export function SessionCompleteModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t("timer.sessionComplete")} onClose={onClose}>
       <div className="text-center">
-        <div className="text-xs uppercase tracking-wider text-ink-faint">
+        <div className="text-xs uppercase tracking-wider text-fg-3">
           {t("timer.focused")}
         </div>
-        <div className="mt-1 font-mono text-3xl text-accent-glow">
+        <div className="mt-1 font-mono text-3xl text-accent">
           {secondsToHuman(seconds)}
         </div>
       </div>
@@ -53,8 +53,8 @@ export function SessionCompleteModal({ onClose }: { onClose: () => void }) {
               onClick={() => setProgress(p)}
               className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
                 progress === p
-                  ? "border-accent bg-accent/10 text-accent-glow"
-                  : "border-border text-ink-soft hover:border-ink-faint"
+                  ? "border-accent bg-accent-bg text-accent"
+                  : "border-border text-fg-2 hover:border-border-strong"
               }`}
             >
               {t(`timer.progress${p}`)}
@@ -72,8 +72,8 @@ export function SessionCompleteModal({ onClose }: { onClose: () => void }) {
               onClick={() => setDifficulty(n)}
               className={`h-9 w-9 rounded-lg border text-sm ${
                 difficulty === n
-                  ? "border-accent bg-accent/10 text-accent-glow"
-                  : "border-border text-ink-soft hover:border-ink-faint"
+                  ? "border-accent bg-accent-bg text-accent"
+                  : "border-border text-fg-2 hover:border-border-strong"
               }`}
             >
               {n}

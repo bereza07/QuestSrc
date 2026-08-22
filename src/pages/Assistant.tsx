@@ -5,7 +5,7 @@ import { useToastStore } from "@/stores/toastStore";
 import { useChatDraftStore } from "@/stores/chatDraftStore";
 import { RulesModal } from "@/features/ai/RulesModal";
 import { useT, useI18nStore } from "@/i18n";
-import { IconChat, IconCheck } from "@/components/icons";
+import { IconChat, IconCheck, IconBook, IconRotateCCW } from "@/components/icons";
 import type { AIAction, AIWarning } from "@/types/ai";
 import type { ChatMessage } from "@/services/ai/provider";
 import { AIError } from "@/services/ai/provider";
@@ -240,11 +240,11 @@ export function Assistant() {
   if (!configured) {
     return (
       <div>
-        <h1 className="qf-heading text-2xl text-ink">{t("ai.title")}</h1>
+        <h1 className="text-xl font-semibold text-fg">{t("ai.title")}</h1>
         <div className="qf-card mt-6 p-8 text-center">
-          <IconChat size={28} className="mx-auto text-ink-faint" />
-          <div className="mt-3 qf-heading text-lg text-ink">{t("ai.noKeyTitle")}</div>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">{t("ai.noKeyBody")}</p>
+          <IconChat size={28} className="mx-auto text-fg-3" />
+          <div className="mt-3 text-base font-semibold text-fg">{t("ai.noKeyTitle")}</div>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-fg-2">{t("ai.noKeyBody")}</p>
           <Link to="/settings" className="qf-btn-primary mt-4 inline-flex">
             {t("ai.goToSettings")}
           </Link>
@@ -259,13 +259,13 @@ export function Assistant() {
     <div className="flex h-[calc(100vh-6rem)] flex-col">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="qf-heading text-2xl text-ink">{t("ai.title")}</h1>
-          <p className="mt-0.5 text-xs text-ink-faint">{t("ai.subtitle")}</p>
+          <h1 className="text-xl font-semibold text-fg">{t("ai.title")}</h1>
+          <p className="mt-0.5 text-xs text-fg-3">{t("ai.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <ProjectScopeSelector />
           <button className="qf-btn-ghost text-xs" onClick={() => setShowRules(true)}>
-            📜 {t("ai.rules")}
+            <IconBook size={14} /> {t("ai.rules")}
           </button>
           {messages.length > 0 && (
             <button className="qf-btn-ghost text-xs" onClick={clearChat}>
@@ -284,13 +284,13 @@ export function Assistant() {
       >
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="qf-heading text-lg text-ink-soft">{t("ai.emptyTitle")}</div>
+            <div className="text-base font-semibold text-fg-2">{t("ai.emptyTitle")}</div>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {["ai.suggest1", "ai.suggest2", "ai.suggest3"].map((k) => (
                 <button
                   key={k}
                   onClick={() => send(t(k))}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs text-ink-soft hover:border-accent hover:text-accent"
+                  className="rounded-full border border-border px-3 py-1.5 text-xs text-fg-2 hover:border-accent hover:text-accent"
                 >
                   {t(k)}
                 </button>
@@ -310,10 +310,10 @@ export function Assistant() {
           return (
           <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+              className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
                 m.role === "user"
-                  ? "bg-accent/15 text-ink"
-                  : "border border-border bg-bg-soft/50 text-ink-soft"
+                  ? "bg-accent-bg text-fg"
+                  : "border border-border bg-surface text-fg-2"
               }`}
             >
               {m.content && <div className="whitespace-pre-wrap">{m.content}</div>}
@@ -334,7 +334,7 @@ export function Assistant() {
                         key={opt}
                         onClick={() => void send(opt)}
                         disabled={busy}
-                        className="rounded-full border border-accent/40 bg-accent/5 px-3 py-1 text-xs text-accent hover:bg-accent/10 disabled:opacity-50"
+                        className="rounded-full border border-accent bg-accent-bg px-3 py-1 text-xs text-accent hover:bg-accent-bg disabled:opacity-50"
                       >
                         {opt}
                       </button>
@@ -366,7 +366,7 @@ export function Assistant() {
               {/* Assistant replied but proposed nothing to apply — clarify it's
                   a chat/question reply, not a broken action panel. */}
               {m.role === "assistant" && !showActions && !m.applied && !m.error && m.content && (
-                <div className="mt-1 text-[10px] italic text-ink-faint">
+                <div className="mt-1 text-[10px] italic text-fg-3">
                   {t("ai.noActionsHint")}
                 </div>
               )}
@@ -374,9 +374,9 @@ export function Assistant() {
                 <button
                   onClick={retry}
                   disabled={busy}
-                  className="mt-2 rounded-md border border-danger/50 px-2.5 py-1 text-xs text-danger hover:bg-danger/10 disabled:opacity-50"
+                  className="mt-2 inline-flex items-center gap-1 rounded-md border border-danger px-2.5 py-1 text-xs text-danger hover:bg-danger-bg disabled:opacity-50"
                 >
-                  ↻ {t("ai.retry")}
+                  <IconRotateCCW size={12} /> {t("ai.retry")}
                 </button>
               )}
             </div>
@@ -455,7 +455,7 @@ export function Assistant() {
 
 function TypingIndicator({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-ink-faint" aria-label={label}>
+    <div className="flex items-center gap-2 text-sm text-fg-3" aria-label={label}>
       <span className="flex gap-1">
         {[0, 1, 2].map((i) => (
           <span
@@ -495,11 +495,11 @@ function ActionPreview({
       case "CREATE_GOAL":
         return a.title;
       case "CREATE_PROJECT":
-        return `📁 ${a.name}`;
+        return a.name;
       case "CREATE_STAT":
         return a.name;
       case "CREATE_ACHIEVEMENT":
-        return `${a.icon ?? "🎖️"}  ${a.name} · ${a.condition.metric} ≥ ${a.condition.atLeast}`;
+        return `${a.name} · ${a.condition.metric} ≥ ${a.condition.atLeast}`;
       case "MOVE_TASK":
         return `${taskTitle(a.taskId)} → ${a.plannedDate ?? "—"}`;
       case "UPDATE_TASK":
@@ -508,11 +508,10 @@ function ActionPreview({
       case "DELETE_TASK":
         return taskTitle(a.taskId);
       case "CREATE_RULE":
-        return `📜 ${a.text}`;
       case "UPDATE_RULE":
-        return `📜 ${a.text}`;
+        return a.text;
       case "DELETE_RULE":
-        return `📜 (${a.ruleId.slice(0, 6)}…)`;
+        return `(${a.ruleId.slice(0, 6)}…)`;
       case "ASK_CHOICES":
         // Never rendered here — questionnaires get their own <ChoicesForm />.
         return "";
@@ -520,15 +519,15 @@ function ActionPreview({
   }
 
   return (
-    <div className="mt-3 rounded-xl border border-accent/30 bg-bg/40 p-3">
+    <div className="mt-3 rounded-md border border-accent bg-surface p-3">
       <div className="qf-label text-accent">{t("ai.proposedChanges")}</div>
       <ul className="mt-2 space-y-1">
         {actions.map((a, i) => (
           <li key={i} className="flex items-baseline gap-2 text-xs">
-            <span className="shrink-0 rounded bg-bg-soft px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-faint">
+            <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-fg-3">
               {t(`ai.action${a.type}`)}
             </span>
-            <span className="text-ink-soft">{describe(a)}</span>
+            <span className="text-fg-2">{describe(a)}</span>
           </li>
         ))}
       </ul>
@@ -635,7 +634,7 @@ function ChoicesForm({
   const anyAnswered = Object.values(state).some((s) => s.picks.size > 0 || s.custom.trim());
 
   return (
-    <div className="mt-2 rounded-xl border border-accent/30 bg-bg-elevated/40 p-3">
+    <div className="mt-2 rounded-md border border-accent bg-surface-2 p-3">
       <div className="qf-label text-accent mb-2">{t("ai.questionnaire")}</div>
       <div className="space-y-3">
         {questions.map((q, qi) => {
@@ -645,7 +644,7 @@ function ChoicesForm({
           const s = state[qi];
           return (
             <div key={qi}>
-              <div className="text-sm text-ink">{q.prompt}</div>
+              <div className="text-sm text-fg">{q.prompt}</div>
               {hasOptions && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {(q.options ?? []).map((opt) => {
@@ -658,8 +657,8 @@ function ChoicesForm({
                         disabled={disabled}
                         className={`rounded-full border px-3 py-1 text-xs transition ${
                           on
-                            ? "border-accent bg-accent/15 text-accent-glow"
-                            : "border-border text-ink-soft hover:border-ink-faint"
+                            ? "border-accent bg-accent-bg text-accent"
+                            : "border-border text-fg-2 hover:border-border-strong"
                         } disabled:opacity-50`}
                       >
                         {multi ? (on ? "☑" : "☐") : on ? "●" : "○"} {opt}

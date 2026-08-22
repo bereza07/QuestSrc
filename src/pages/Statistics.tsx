@@ -11,13 +11,15 @@ import {
 } from "@/services/statistics/statisticsService";
 import type { DailyActivity } from "@/data/repositories/activityRepo";
 
+// Chart colors read straight from the design tokens so the SVGs flip with the
+// theme without any extra logic.
 const C = {
-  accent: "#d9a441",
-  arcane: "#6f8cff",
-  success: "#5bbf82",
-  danger: "#d3596b",
-  faint: "#5f6883",
-  border: "#272e42",
+  accent: "var(--accent)",
+  arcane: "var(--accent)",
+  success: "var(--success)",
+  danger: "var(--danger)",
+  faint: "var(--fg-3)",
+  border: "var(--border-c)",
 };
 
 export function Statistics() {
@@ -74,7 +76,7 @@ export function Statistics() {
 
   return (
     <div>
-      <h1 className="qf-heading text-2xl text-ink">{t("statistics.title")}</h1>
+      <h1 className="text-xl font-semibold text-fg">{t("statistics.title")}</h1>
 
       {/* Filter bar */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -84,7 +86,7 @@ export function Statistics() {
               key={p}
               onClick={() => setPeriod(p)}
               className={`rounded-md px-3 py-1 text-sm ${
-                period === p ? "bg-accent text-bg" : "text-ink-soft hover:text-ink"
+                period === p ? "bg-accent text-accent-fg" : "text-fg-2 hover:text-fg"
               }`}
             >
               {t(`statistics.period_${p}`)}
@@ -94,7 +96,7 @@ export function Statistics() {
         {period !== "all" && (
           <div className="flex items-center gap-1">
             <button className="qf-btn-ghost" onClick={() => shift(-1)}>‹</button>
-            <span className="min-w-[7rem] text-center text-sm text-ink-soft">
+            <span className="min-w-[7rem] text-center text-sm text-fg-2">
               {rangeLabel}
             </span>
             <button className="qf-btn-ghost" onClick={() => shift(1)}>›</button>
@@ -160,7 +162,7 @@ export function Statistics() {
               avgSeconds={res.avgPerWorkingDaySeconds}
               lang={lang}
             />
-            <div className="mt-2 flex justify-between text-xs text-ink-faint">
+            <div className="mt-2 flex justify-between text-xs text-fg-3">
               <span>{t("statistics.avgPerDayHint")}</span>
               <span className="font-mono text-accent">
                 {t("statistics.avgPerDay")}: {secondsToHuman(res.avgPerWorkingDaySeconds)}
@@ -172,7 +174,7 @@ export function Statistics() {
             {/* Estimate accuracy */}
             <Card title={t("statistics.estimateTitle")}>
               {res.estimate.count === 0 ? (
-                <div className="text-sm text-ink-faint">{t("statistics.estEmpty")}</div>
+                <div className="text-sm text-fg-3">{t("statistics.estEmpty")}</div>
               ) : (
                 <div>
                   <div className="flex items-baseline gap-2">
@@ -180,14 +182,14 @@ export function Statistics() {
                       {res.estimate.avgDeltaPct! > 0 ? "+" : ""}
                       {res.estimate.avgDeltaPct}%
                     </span>
-                    <span className="text-xs text-ink-faint">
+                    <span className="text-xs text-fg-3">
                       {t("statistics.estAvg")} · {t("statistics.estOnN", { n: res.estimate.count })}
                     </span>
                   </div>
                   <div className="mt-3 flex gap-4 text-sm">
                     <span className="text-danger">{t("statistics.over")}: {res.estimate.over}</span>
                     <span className="text-success">{t("statistics.accurate")}: {res.estimate.accurate}</span>
-                    <span className="text-arcane">{t("statistics.under")}: {res.estimate.under}</span>
+                    <span className="text-accent">{t("statistics.under")}: {res.estimate.under}</span>
                   </div>
                 </div>
               )}
@@ -228,10 +230,10 @@ export function Statistics() {
                   return (
                     <div key={p.projectId ?? "none"}>
                       <div className="mb-0.5 flex justify-between text-xs">
-                        <span className="text-ink-soft">{p.name}</span>
-                        <span className="font-mono text-ink-faint">{secondsToHuman(p.seconds)}</span>
+                        <span className="text-fg-2">{p.name}</span>
+                        <span className="font-mono text-fg-3">{secondsToHuman(p.seconds)}</span>
                       </div>
-                      <div className="h-2 w-full overflow-hidden rounded bg-bg-soft">
+                      <div className="h-2 w-full overflow-hidden rounded bg-surface-2">
                         <div
                           className="h-full rounded"
                           style={{ width: `${(p.seconds / max) * 100}%`, background: C.arcane }}
@@ -249,14 +251,14 @@ export function Statistics() {
       {/* Stat progression (all-time) */}
       <Card title={t("statistics.statProgression")}>
         {stats.length === 0 ? (
-          <div className="text-sm text-ink-faint">{t("statistics.noData")}</div>
+          <div className="text-sm text-fg-3">{t("statistics.noData")}</div>
         ) : (
           <div className="space-y-3">
             {[...stats].sort((a, b) => b.totalXp - a.totalXp).map((s) => (
               <div key={s.id}>
                 <div className="mb-1 flex justify-between text-xs">
-                  <span className="text-ink">{s.name}</span>
-                  <span className="font-mono text-ink-faint">Lv.{s.level} · {s.totalXp} XP</span>
+                  <span className="text-fg">{s.name}</span>
+                  <span className="font-mono text-fg-3">Lv.{s.level} · {s.totalXp} XP</span>
                 </div>
                 <ProgressBar value={s.currentXp / xpForLevel(s.level)} height={6} tone="arcane" />
               </div>
@@ -285,7 +287,7 @@ function Card({
   return (
     <div className="qf-card mt-4 p-5">
       <div className="qf-label">{title}</div>
-      {hint && <p className="mt-0.5 text-[11px] text-ink-faint">{hint}</p>}
+      {hint && <p className="mt-0.5 text-[11px] text-fg-3">{hint}</p>}
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -302,8 +304,8 @@ function Tile({
 }) {
   return (
     <div className="qf-card p-4 text-center">
-      <div className="text-[11px] uppercase tracking-wider text-ink-faint">{label}</div>
-      <div className={`mt-1 font-mono text-xl ${tone === "danger" ? "text-danger" : "text-ink"}`}>
+      <div className="text-[11px] uppercase tracking-wider text-fg-3">{label}</div>
+      <div className={`mt-1 font-mono text-xl ${tone === "danger" ? "text-danger" : "text-fg"}`}>
         {value}
       </div>
     </div>
@@ -313,8 +315,8 @@ function Tile({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-ink-faint">{label}</span>
-      <span className="font-mono text-ink">{value}</span>
+      <span className="text-fg-3">{label}</span>
+      <span className="font-mono text-fg">{value}</span>
     </div>
   );
 }
@@ -325,7 +327,7 @@ function StackBar({
   segments: { value: number; color: string; label: string }[];
 }) {
   const total = segments.reduce((a, s) => a + s.value, 0);
-  if (total === 0) return <div className="text-sm text-ink-faint">—</div>;
+  if (total === 0) return <div className="text-sm text-fg-3">—</div>;
   return (
     <div>
       <div className="flex h-3 w-full overflow-hidden rounded-full">
@@ -337,9 +339,9 @@ function StackBar({
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         {segments.map((s, i) => (
-          <span key={i} className="flex items-center gap-1.5 text-ink-soft">
+          <span key={i} className="flex items-center gap-1.5 text-fg-2">
             <span className="h-2 w-2 rounded-sm" style={{ background: s.color }} />
-            {s.label} <span className="font-mono text-ink-faint">{s.value}</span>
+            {s.label} <span className="font-mono text-fg-3">{s.value}</span>
           </span>
         ))}
       </div>
@@ -426,7 +428,7 @@ function FocusBars({
 }
 
 function Heatmap({ activity }: { activity: Map<string, DailyActivity> }) {
-  const weeks = 12;
+  const weeks = 26;
   const today = todayKey();
   const [ty, tm, td] = today.split("-").map(Number);
   const dow = (new Date(ty, tm - 1, td).getDay() + 6) % 7;
@@ -439,34 +441,54 @@ function Heatmap({ activity }: { activity: Map<string, DailyActivity> }) {
       cells.push({ date, mins: (activity.get(date)?.focusedSeconds ?? 0) / 60 });
     }
   }
-  const shade = (m: number) =>
-    m <= 0 ? "#272e42" : m < 15 ? "#8a6e38" : m < 45 ? "#b98a34" : m < 90 ? "#d9a441" : "#f0c264";
+  // Palette-aware shades: empty uses the surface hairline; increasing intensity
+  // walks from a very faint accent tint to full accent so both light and dark
+  // themes read correctly.
+  const shade = (m: number): string => {
+    if (m <= 0) return "var(--surface-2)";
+    if (m < 15)  return "color-mix(in srgb, var(--accent) 22%, transparent)";
+    if (m < 45)  return "color-mix(in srgb, var(--accent) 45%, transparent)";
+    if (m < 90)  return "color-mix(in srgb, var(--accent) 70%, transparent)";
+    return "var(--accent)";
+  };
 
-  const size = 13;
-  const gap = 3;
+  // The SVG uses a viewBox in "cell + gap" units and stretches to 100% of the
+  // container's width. Cells scale proportionally so the whole heatmap fills
+  // the card. preserveAspectRatio=none lets each cell become a rectangle when
+  // the container is very wide — deliberate: horizontal density beats squares.
+  const CELL = 10;
+  const GAP = 2;
+  const stride = CELL + GAP;
+  const viewW = weeks * stride - GAP;
+  const viewH = 7 * stride - GAP;
+
   return (
-    <div className="overflow-x-auto">
-      <svg width={weeks * (size + gap)} height={7 * (size + gap)} className="min-w-full">
-        {cells.map((c, i) => {
-          const w = Math.floor(i / 7);
-          const d = i % 7;
-          const future = c.date > today;
-          return (
-            <rect
-              key={c.date}
-              x={w * (size + gap)}
-              y={d * (size + gap)}
-              width={size}
-              height={size}
-              rx={2.5}
-              fill={future ? "transparent" : shade(c.mins)}
-              opacity={future ? 0.2 : 1}
-            >
-              <title>{`${c.date}: ${Math.round(c.mins)}m`}</title>
-            </rect>
-          );
-        })}
-      </svg>
-    </div>
+    <svg
+      viewBox={`0 0 ${viewW} ${viewH}`}
+      preserveAspectRatio="none"
+      className="w-full"
+      style={{ height: `${Math.round(viewH * 2.2)}px` }}
+      role="img"
+    >
+      {cells.map((c, i) => {
+        const w = Math.floor(i / 7);
+        const d = i % 7;
+        const future = c.date > today;
+        return (
+          <rect
+            key={c.date}
+            x={w * stride}
+            y={d * stride}
+            width={CELL}
+            height={CELL}
+            rx={1.5}
+            fill={future ? "var(--surface-2)" : shade(c.mins)}
+            opacity={future ? 0.3 : 1}
+          >
+            <title>{`${c.date}: ${Math.round(c.mins)}m`}</title>
+          </rect>
+        );
+      })}
+    </svg>
   );
 }

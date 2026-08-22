@@ -52,7 +52,7 @@ export function FocusHistoryModal({ onClose }: { onClose: () => void }) {
             key={r}
             onClick={() => setRange(r)}
             className={`rounded-md px-3 py-1 text-sm ${
-              range === r ? "bg-accent text-bg" : "text-ink-soft hover:text-ink"
+              range === r ? "bg-accent text-accent-fg" : "text-fg-2 hover:text-fg"
             }`}
           >
             {t(`timer.${r}`)}
@@ -69,18 +69,18 @@ export function FocusHistoryModal({ onClose }: { onClose: () => void }) {
 
       <div className="mt-5 space-y-1">
         {sessions.length === 0 && (
-          <div className="py-8 text-center text-sm text-ink-faint">
+          <div className="py-8 text-center text-sm text-fg-3">
             {t("timer.noSessions")}
           </div>
         )}
         {sessions.map((s) => (
           <div
             key={s.id}
-            className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-bg-soft/60"
+            className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-surface-2"
           >
             <div className="min-w-0">
-              <div className="truncate text-sm text-ink">{taskTitle(s.taskId)}</div>
-              <div className="text-xs text-ink-faint">
+              <div className="truncate text-sm text-fg">{taskTitle(s.taskId)}</div>
+              <div className="text-xs text-fg-3">
                 {new Date(s.startedAt).toLocaleString(lang, {
                   month: "short",
                   day: "numeric",
@@ -104,8 +104,8 @@ export function FocusHistoryModal({ onClose }: { onClose: () => void }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border p-3 text-center">
-      <div className="text-[11px] uppercase tracking-wider text-ink-faint">{label}</div>
-      <div className="mt-1 font-mono text-lg text-ink">{value}</div>
+      <div className="text-[11px] uppercase tracking-wider text-fg-3">{label}</div>
+      <div className="mt-1 font-mono text-lg text-fg">{value}</div>
     </div>
   );
 }

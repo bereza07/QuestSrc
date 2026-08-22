@@ -63,7 +63,7 @@ export function Welcome() {
               key={l}
               onClick={() => setLang(l)}
               className={`rounded-full px-3 py-1 text-xs transition ${
-                lang === l ? "bg-accent/15 text-accent" : "text-ink-faint hover:text-ink-soft"
+                lang === l ? "bg-accent-bg text-accent" : "text-fg-3 hover:text-fg-2"
               }`}
             >
               {LANG_LABELS[l]}
@@ -71,9 +71,9 @@ export function Welcome() {
           ))}
         </div>
 
-        <div className="mt-6 text-center">
-          <div className="qf-heading text-3xl text-accent-glow">QuestForge</div>
-          <p className="mt-2 text-sm text-ink-soft">{t("welcome.subtitle")}</p>
+        <div className="mt-8 text-center">
+          <div className="text-3xl font-semibold tracking-tight text-fg">QuestForge</div>
+          <p className="mt-2 text-sm text-fg-2">{t("welcome.subtitle")}</p>
         </div>
 
         {mode === "choose" && (
@@ -87,7 +87,7 @@ export function Welcome() {
             <button className="qf-btn-ghost w-full justify-center" onClick={() => setMode("signin")}>
               {t("welcome.signIn")}
             </button>
-            <p className="text-center text-[11px] text-ink-faint">{t("welcome.hint")}</p>
+            <p className="text-center text-[11px] text-fg-3">{t("welcome.hint")}</p>
           </div>
         )}
 
@@ -103,7 +103,7 @@ export function Welcome() {
               placeholder="http://localhost:4000"
               className="qf-input"
             />
-            <p className="text-[11px] leading-relaxed text-ink-faint">
+            <p className="text-[11px] leading-relaxed text-fg-3">
               {t("settings.syncServerHint")}
             </p>
             <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export function Welcome() {
                 {t("settings.syncRegister")}
               </button>
               <button
-                className="text-xs text-ink-faint hover:text-ink-soft"
+                className="text-xs text-fg-3 hover:text-fg-2"
                 onClick={() => setMode("choose")}
               >
                 {t("common.back")}

@@ -20,7 +20,7 @@ export function TimerRecoveryModal() {
 
   return (
     <Modal title={t("timer.recoveryTitle")} onClose={() => void recoveryDiscard()}>
-      <p className="text-sm text-ink-soft">{t("timer.recoveryBody", { time })}</p>
+      <p className="text-sm text-fg-2">{t("timer.recoveryBody", { time })}</p>
       <div className="mt-5 flex flex-col gap-2">
         <button className="qf-btn-primary justify-center" onClick={() => void recoveryResume()}>
           {t("timer.recoveryResume")}

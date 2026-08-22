@@ -63,7 +63,7 @@ export function TimerWidget() {
           <IconClock size={14} /> {t("timer.title")}
         </div>
         <button
-          className="text-xs text-ink-faint hover:text-ink"
+          className="text-xs text-fg-3 hover:text-fg"
           onClick={() => setShowHistory(true)}
         >
           {t("timer.history")}
@@ -72,12 +72,12 @@ export function TimerWidget() {
 
       {active ? (
         <div className="mt-3 text-center">
-          <div className="truncate text-sm text-ink-soft">
+          <div className="truncate text-sm text-fg-2">
             {runningTask ? runningTask.title : t("timer.freeFocus")}
           </div>
           <div
             className={`mt-1 font-mono text-4xl tabular-nums ${
-              running ? "text-accent-glow" : "text-ink-faint"
+              running ? "text-accent" : "text-fg-3"
             }`}
           >
             {secondsToClock(clock)}
@@ -106,7 +106,7 @@ export function TimerWidget() {
                 key={m}
                 onClick={() => setMode(m)}
                 className={`rounded-md px-3 py-1 text-xs ${
-                  mode === m ? "bg-accent text-bg" : "text-ink-soft hover:text-ink"
+                  mode === m ? "bg-accent text-accent-fg" : "text-fg-2 hover:text-fg"
                 }`}
               >
                 {t(`timer.${m.toLowerCase()}`)}
@@ -122,14 +122,14 @@ export function TimerWidget() {
                   onClick={() => setPomodoro(p)}
                   className={`rounded-md border px-3 py-1 text-xs ${
                     pomodoro === p
-                      ? "border-accent text-accent-glow"
-                      : "border-border text-ink-soft"
+                      ? "border-accent text-accent"
+                      : "border-border text-fg-2"
                   }`}
                 >
                   {p} {t("timer.minutes")}
                 </button>
               ))}
-              <span className="text-ink-faint">·</span>
+              <span className="text-fg-3">·</span>
               <input
                 type="number"
                 min={1}
@@ -141,10 +141,10 @@ export function TimerWidget() {
                 aria-label={t("timer.customMinutes")}
                 title={t("timer.customMinutes")}
                 className={`qf-input w-20 ${
-                  POMODORO_PRESETS.includes(pomodoro) ? "" : "border-accent text-accent-glow"
+                  POMODORO_PRESETS.includes(pomodoro) ? "" : "border-accent text-accent"
                 }`}
               />
-              <span className="text-xs text-ink-faint">{t("timer.minutes")}</span>
+              <span className="text-xs text-fg-3">{t("timer.minutes")}</span>
             </div>
           )}
           {mode === "COUNTDOWN" && (
@@ -156,7 +156,7 @@ export function TimerWidget() {
                 onChange={(e) => setCountdownMin(Number(e.target.value) || 1)}
                 className="qf-input w-24"
               />
-              <span className="text-xs text-ink-faint">{t("timer.minutes")}</span>
+              <span className="text-xs text-fg-3">{t("timer.minutes")}</span>
             </div>
           )}
 

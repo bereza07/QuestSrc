@@ -2,77 +2,184 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    color-scheme: dark;
-  }
+/*
+ * QuestForge redesign — minimalist warm palette.
+ *
+ * Two themes, both first-class:
+ *   :root    → light (cream #F5F4F1 / terracotta accent)
+ *   .dark    → warm dark (#111110 / warmer terracotta)
+ * Toggled via <html class="dark">. Semantic tokens are surfaced to Tailwind in
+ * tailwind.config.js via var(--...). Everything else uses those tokens — no
+ * raw hex outside this file.
+ */
 
-  html,
-  body,
-  #root {
-    height: 100%;
-  }
+:root {
+  color-scheme: light;
+  --bg:           #F5F4F1;
+  --surface:      #FFFFFF;
+  --surface-2:   #EDECEA;
+  --sidebar-bg:  #ECEAE7;
+  --border-c:     #DAD7D2;
+  --border-strong:#BEB9B1;
+  --fg:           #18170F;
+  --fg-2:         #64605A;
+  --fg-3:         #9A9590;
+  --accent:       #B55C18;
+  --accent-bg:    #F2E8DE;
+  --accent-fg:    #FFFFFF;
+  --success:      #2E7D5E;
+  --success-bg:   #DEF0E9;
+  --danger:       #C43434;
+  --danger-bg:    #FCE8E8;
+  --warn:         #8A6A1A;
+  --warn-bg:      #F5EDDA;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg:           #111110;
+  --surface:      #1A1918;
+  --surface-2:    #222120;
+  --sidebar-bg:   #161513;
+  --border-c:     #2D2B27;
+  --border-strong:#3D3B36;
+  --fg:           #EDE9E3;
+  --fg-2:         #938F88;
+  --fg-3:         #5C5852;
+  --accent:       #D4843E;
+  --accent-bg:    #281A0C;
+  --accent-fg:    #111110;
+  --success:      #3AAB7A;
+  --success-bg:   #102018;
+  --danger:       #E05555;
+  --danger-bg:    #200C0C;
+  --warn:         #D4A84E;
+  --warn-bg:      #1E1608;
+}
+
+@layer base {
+  html, body, #root { height: 100%; margin: 0; padding: 0; }
 
   body {
-    @apply bg-bg text-ink font-sans antialiased;
-    background-image: radial-gradient(
-        1200px 600px at 80% -10%,
-        rgba(111, 140, 255, 0.06),
-        transparent
-      ),
-      radial-gradient(
-        900px 500px at -10% 110%,
-        rgba(217, 164, 65, 0.05),
-        transparent
-      );
+    @apply bg-bg text-fg font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Subtle custom scrollbars to match the dark HUD. */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
+  ::placeholder { color: var(--fg-3); }
+
+  /* Thin, restrained scrollbars — same visual language on all surfaces. */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    background: var(--border-c);
+    border-radius: 3px;
   }
-  ::-webkit-scrollbar-track {
-    background: transparent;
+  ::-webkit-scrollbar-thumb:hover { background: var(--fg-3); }
+  * { scrollbar-width: thin; scrollbar-color: var(--border-c) transparent; }
+
+  /* Keyboard-first focus ring — accent, 1.5px, offset 2. Consistent everywhere. */
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
   }
 }
 
 @layer components {
+  /* --- Surfaces ---------------------------------------------------------- */
+
   .qf-card {
-    @apply bg-bg-card border border-border rounded-xl shadow-card;
+    @apply bg-surface border border-border rounded-lg;
   }
 
+  .qf-panel {
+    @apply bg-surface-2 border border-border rounded-md;
+  }
+
+  /* --- Typography helpers ------------------------------------------------ */
+
   .qf-heading {
-    @apply font-display tracking-wide;
+    @apply font-sans font-medium tracking-tight text-fg;
   }
 
   .qf-label {
-    @apply text-xs uppercase tracking-[0.15em] text-ink-faint;
+    @apply text-[11px] uppercase tracking-[0.08em] font-medium text-fg-2;
   }
+
+  .qf-mono {
+    @apply font-mono tabular-nums;
+  }
+
+  /* --- Inputs ------------------------------------------------------------ */
 
   .qf-input {
-    @apply w-full bg-bg-soft border border-border rounded-lg px-3 py-2 text-ink
-      placeholder:text-ink-faint focus:outline-none focus:border-accent-soft
-      focus:ring-1 focus:ring-accent-soft transition;
+    @apply w-full bg-surface border border-border rounded text-fg
+      placeholder:text-fg-3 px-3 py-2 text-sm transition-colors
+      focus:outline-none focus:border-accent
+      disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* --- Buttons ----------------------------------------------------------- */
+
   .qf-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
-      font-medium transition select-none disabled:opacity-50
-      disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded px-3 py-1.5
+      text-sm font-medium leading-tight transition-colors select-none
+      disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .qf-btn-primary {
-    @apply qf-btn bg-accent text-bg hover:bg-accent-glow shadow-glow;
+    @apply qf-btn text-accent-fg;
+    background: var(--accent);
   }
+  .qf-btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+
   .qf-btn-ghost {
-    @apply qf-btn bg-transparent border border-border text-ink-soft
-      hover:text-ink hover:border-ink-faint;
+    @apply qf-btn bg-transparent border border-border text-fg-2
+      hover:text-fg hover:border-border-strong;
   }
+
   .qf-btn-danger {
-    @apply qf-btn bg-transparent border border-danger/40 text-danger
-      hover:bg-danger/10;
+    @apply qf-btn bg-transparent border text-danger
+      hover:bg-danger-bg;
+    border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  }
+
+  /* --- Chips / badges ---------------------------------------------------- */
+
+  .qf-chip {
+    @apply inline-flex items-center gap-1 rounded-sm border border-border
+      bg-surface-2 px-1.5 py-0.5 text-[11px] text-fg-2;
+  }
+  .qf-chip-accent {
+    @apply qf-chip;
+    background: var(--accent-bg);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+  }
+  .qf-chip-success {
+    @apply qf-chip;
+    background: var(--success-bg);
+    border-color: color-mix(in srgb, var(--success) 30%, transparent);
+    color: var(--success);
+  }
+  .qf-chip-warn {
+    @apply qf-chip;
+    background: var(--warn-bg);
+    border-color: color-mix(in srgb, var(--warn) 30%, transparent);
+    color: var(--warn);
+  }
+  .qf-chip-danger {
+    @apply qf-chip;
+    background: var(--danger-bg);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+    color: var(--danger);
+  }
+
+  /* --- Keyboard shortcut ------------------------------------------------- */
+
+  .qf-kbd {
+    @apply inline-flex items-center rounded-sm border border-border
+      bg-surface-2 px-1 py-0.5 text-[10px] font-mono text-fg-3;
   }
 }

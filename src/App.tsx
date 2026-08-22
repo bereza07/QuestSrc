@@ -18,8 +18,8 @@ import { Statistics } from "@/pages/Statistics";
 function Splash({ message }: { message: string }) {
   return (
     <div className="flex h-full min-h-screen flex-col items-center justify-center gap-3">
-      <div className="qf-heading text-2xl text-accent-glow">QuestForge</div>
-      <div className="text-sm text-ink-faint">{message}</div>
+      <div className="qf-heading text-2xl text-accent">QuestForge</div>
+      <div className="text-sm text-fg-3">{message}</div>
     </div>
   );
 }
@@ -31,8 +31,8 @@ function ErrorScreen({ error }: { error: string }) {
       <div className="qf-heading text-2xl text-danger">
         {t("app.dbUnavailableTitle")}
       </div>
-      <p className="max-w-md text-sm text-ink-soft">{error}</p>
-      <p className="max-w-md text-xs text-ink-faint">{t("app.dbUnavailableHint")}</p>
+      <p className="max-w-md text-sm text-fg-2">{error}</p>
+      <p className="max-w-md text-xs text-fg-3">{t("app.dbUnavailableHint")}</p>
     </div>
   );
 }

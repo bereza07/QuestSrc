@@ -121,7 +121,7 @@ export function Calendar() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="qf-heading text-2xl text-ink">{t("calendar.title")}</h1>
+        <h1 className="text-xl font-semibold text-fg">{t("calendar.title")}</h1>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-lg border border-border p-1">
             {(["week", "month"] as Mode[]).map((m) => (
@@ -129,7 +129,7 @@ export function Calendar() {
                 key={m}
                 onClick={() => setMode(m)}
                 className={`rounded-md px-3 py-1 text-sm ${
-                  mode === m ? "bg-accent text-bg" : "text-ink-soft hover:text-ink"
+                  mode === m ? "bg-accent text-accent-fg" : "text-fg-2 hover:text-fg"
                 }`}
               >
                 {t(`calendar.${m}`)}
@@ -148,8 +148,8 @@ export function Calendar() {
         </div>
       </div>
 
-      <div className="mt-1 text-sm text-ink-faint">{monthLabel}</div>
-      <p className="mt-1 text-xs text-ink-faint">
+      <div className="mt-1 text-sm text-fg-3">{monthLabel}</div>
+      <p className="mt-1 text-xs text-fg-3">
         {picked ? t("calendar.pickHint") : t("calendar.dropHint")}
       </p>
 
@@ -168,20 +168,20 @@ export function Calendar() {
               onDragLeave={() => setDragOver((c) => (c === k ? null : c))}
               onDrop={(e) => onDrop(e, k)}
               onClick={() => moveTo(k)}
-              className={`${cellH} rounded-lg border p-2.5 transition ${
+              className={`${cellH} rounded-md border p-2.5 transition-colors ${
                 isOver
-                  ? "border-accent bg-accent/10 ring-1 ring-accent/40"
+                  ? "border-accent bg-accent-bg"
                   : isToday
-                    ? "border-accent/60 bg-accent/5"
-                    : "border-border"
-              } ${inMonth ? "" : "opacity-40"} ${picked ? "cursor-pointer hover:border-accent/60" : ""}`}
+                    ? "border-accent bg-accent-bg"
+                    : "border-border bg-surface"
+              } ${inMonth ? "" : "opacity-50"} ${picked ? "cursor-pointer hover:border-accent" : ""}`}
             >
               <div className="mb-1.5 flex items-baseline justify-between px-0.5">
-                <span className="text-xs uppercase tracking-wide text-ink-faint">
+                <span className="text-xs uppercase tracking-wide text-fg-3">
                   {dow(k)}
                 </span>
                 <span
-                  className={`text-sm ${isToday ? "font-bold text-accent-glow" : "text-ink-soft"}`}
+                  className={`text-sm ${isToday ? "font-bold text-accent" : "text-fg-2"}`}
                 >
                   {dayNum(k)}
                 </span>
@@ -194,9 +194,9 @@ export function Calendar() {
                     onDragStart={(e) => handleDragStart(e, task.id)}
                     onDragEnd={() => setDragId(null)}
                     onClick={(e) => onTaskClick(e, task.id)}
-                    className={`cursor-pointer rounded-md border bg-bg-soft/70 px-2 py-1.5 text-xs text-ink-soft ${
+                    className={`cursor-pointer rounded-md border bg-surface-2 px-2 py-1.5 text-xs text-fg-2 ${
                       picked === task.id
-                        ? "border-accent ring-1 ring-accent/50 text-accent-glow"
+                        ? "border-accent ring-1 ring-accent/50 text-accent"
                         : "border-border"
                     } ${dragId === task.id ? "opacity-50" : ""}`}
                     title={task.title}
@@ -226,7 +226,7 @@ export function Calendar() {
       >
         <div className="qf-label mb-2">{t("calendar.unscheduled")}</div>
         {unscheduled.length === 0 ? (
-          <div className="text-xs text-ink-faint">—</div>
+          <div className="text-xs text-fg-3">—</div>
         ) : (
           <div className="flex flex-wrap gap-2">
             {unscheduled.map((task) => (
@@ -236,9 +236,9 @@ export function Calendar() {
                 onDragStart={(e) => handleDragStart(e, task.id)}
                 onDragEnd={() => setDragId(null)}
                 onClick={(e) => onTaskClick(e, task.id)}
-                className={`cursor-pointer rounded-md border bg-bg-soft/70 px-2 py-1 text-xs text-ink-soft ${
+                className={`cursor-pointer rounded-md border bg-surface-2 px-2 py-1 text-xs text-fg-2 ${
                   picked === task.id
-                    ? "border-accent ring-1 ring-accent/50 text-accent-glow"
+                    ? "border-accent ring-1 ring-accent/50 text-accent"
                     : "border-border"
                 }`}
               >

@@ -45,70 +45,67 @@ export function TaskItem({ task }: TaskItemProps) {
 
   return (
     <div
-      className={`group flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5
-        hover:border-border hover:bg-bg-soft/60 transition ${
-          cancelled ? "opacity-50" : ""
-        }`}
+      className={`group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-surface-2 ${
+        cancelled ? "opacity-50" : ""
+      } ${done ? "opacity-60" : ""}`}
     >
       <button
         onClick={onComplete}
         disabled={done || busy}
         aria-label={done ? t("tasks.completed") : t("tasks.completeAria")}
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition
-          ${
-            done
-              ? "border-success bg-success/20 text-success"
-              : "border-ink-faint text-transparent hover:border-accent hover:text-accent"
-          }`}
+        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+          done
+            ? "border-transparent text-accent-fg"
+            : "border-border text-transparent group-hover:border-fg-3 hover:text-accent"
+        }`}
+        style={done ? { background: "var(--accent)" } : undefined}
       >
-        <IconCheck size={13} />
+        <IconCheck size={10} strokeWidth={2.5} />
       </button>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setOpen(true)}
-            className={`truncate text-left text-sm hover:text-accent-glow ${
-              done ? "text-ink-faint line-through" : "text-ink"
-            }`}
-          >
-            {task.title}
-          </button>
+      <button
+        onClick={() => setOpen(true)}
+        className={`min-w-0 flex-1 truncate text-left text-sm hover:text-accent ${
+          done ? "text-fg-3 line-through" : "text-fg"
+        }`}
+      >
+        {task.title}
+      </button>
+
+      {/* Chips + timer button appear on hover; XP always visible. */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="hidden items-center gap-1.5 group-hover:flex">
           <PriorityDot priority={task.priority} />
-        </div>
-        <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-faint">
           <DifficultyBadge difficulty={task.difficulty} />
           {task.estimatedMinutes ? (
-            <span>~{minutesToHuman(task.estimatedMinutes)}</span>
+            <span className="font-mono text-[11px] text-fg-3">
+              ~{minutesToHuman(task.estimatedMinutes)}
+            </span>
           ) : null}
           {overdue && (
-            <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-danger">
+            <span className="qf-chip-danger">
               {t("tasks.overdue")}
             </span>
           )}
+          {!done && !cancelled && !timerActive && (
+            <button
+              onClick={onQuickStart}
+              aria-label={t("timer.startFocus")}
+              title={t("timer.startFocus")}
+              className="rounded-md p-1 text-fg-3 transition hover:text-accent"
+            >
+              <IconPlay size={12} />
+            </button>
+          )}
         </div>
+        {task.xpReward > 0 && (
+          <span
+            className={`font-mono text-xs ${done ? "text-fg-3" : "text-accent"}`}
+          >
+            +{task.xpReward}
+          </span>
+        )}
       </div>
-
-      {!done && !cancelled && !timerActive && (
-        <button
-          onClick={onQuickStart}
-          aria-label={t("timer.startFocus")}
-          title={t("timer.startFocus")}
-          className="shrink-0 rounded-md p-1 text-ink-faint opacity-0 transition hover:text-accent group-hover:opacity-100"
-        >
-          <IconPlay size={14} />
-        </button>
-      )}
-
-      {task.xpReward > 0 && (
-        <span
-          className={`shrink-0 text-xs font-mono ${
-            done ? "text-ink-faint" : "text-accent"
-          }`}
-        >
-          +{task.xpReward} XP
-        </span>
-      )}
 
       {open && <TaskDetailModal task={task} onClose={() => setOpen(false)} />}
     </div>

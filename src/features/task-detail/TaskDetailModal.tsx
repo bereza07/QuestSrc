@@ -231,7 +231,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
                     await repos.taskImages.remove(img.id);
                     await reload();
                   }}
-                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-bg text-xs text-ink-soft opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-bg text-xs text-fg-2 opacity-0 transition group-hover:opacity-100 hover:text-danger"
                   aria-label={t("common.delete")}
                 >
                   ×
@@ -368,7 +368,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
       <div className="mt-4">
         <label className="qf-label">{t("tasks.statRewards")}</label>
         {stats.length === 0 ? (
-          <div className="mt-1 text-xs text-ink-faint">{t("tasks.noStatsYet")}</div>
+          <div className="mt-1 text-xs text-fg-3">{t("tasks.noStatsYet")}</div>
         ) : (
           <div className="mt-2 flex flex-wrap gap-2">
             {stats.map((stat) => {
@@ -380,8 +380,8 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
                     onClick={() => toggleStat(stat.id)}
                     className={`rounded-full border px-3 py-1 text-sm transition ${
                       on
-                        ? "border-accent bg-accent/15 text-accent-glow"
-                        : "border-border text-ink-soft hover:border-ink-faint"
+                        ? "border-accent bg-accent-bg text-accent"
+                        : "border-border text-fg-2 hover:border-border-strong"
                     }`}
                   >
                     {stat.name}
@@ -397,7 +397,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
                           [stat.id]: Number(e.target.value),
                         }))
                       }
-                      className="w-16 rounded-lg border border-border bg-bg-soft px-2 py-1 text-xs text-ink"
+                      className="w-16 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs text-fg"
                     />
                   )}
                 </div>
@@ -405,7 +405,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
             })}
           </div>
         )}
-        <div className="mt-2 text-xs text-ink-faint">
+        <div className="mt-2 text-xs text-fg-3">
           {t("tasks.totalXp")}: <span className="font-mono text-accent">{clampedTotal}</span>
           {rawTotal !== clampedTotal && (
             <span className="ml-1 text-warn">
@@ -423,14 +423,14 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
         <div className="qf-label">
           {t("tasks.definitionOfDone")}{" "}
           {criteriaProgress.total > 0 && (
-            <span className="ml-1 font-mono text-ink-faint">
+            <span className="ml-1 font-mono text-fg-3">
               {criteriaProgress.done}/{criteriaProgress.total}
             </span>
           )}
         </div>
         <div className="mt-2 space-y-1">
           {criteria.length === 0 && (
-            <div className="text-xs text-ink-faint">{t("tasks.noCriteria")}</div>
+            <div className="text-xs text-fg-3">{t("tasks.noCriteria")}</div>
           )}
           {criteria.map((c) => (
             <div key={c.id} className="group flex items-center gap-2">
@@ -438,22 +438,22 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
                 onClick={() => toggleCriterion(c)}
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                   c.done
-                    ? "border-success bg-success/20 text-success"
-                    : "border-ink-faint text-transparent hover:border-accent"
+                    ? "border-success bg-success-bg text-success"
+                    : "border-border-strong text-transparent hover:border-accent"
                 }`}
               >
                 <IconCheck size={11} />
               </button>
               <span
                 className={`flex-1 text-sm ${
-                  c.done ? "text-ink-faint line-through" : "text-ink-soft"
+                  c.done ? "text-fg-3 line-through" : "text-fg-2"
                 }`}
               >
                 {c.text}
               </span>
               <button
                 onClick={() => removeCriterion(c)}
-                className="text-ink-faint opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                className="text-fg-3 opacity-0 transition group-hover:opacity-100 hover:text-danger"
               >
                 <IconTrash size={14} />
               </button>
@@ -479,7 +479,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
         <div className="qf-label">{t("tasks.subtasks")}</div>
         <div className="mt-2 space-y-1">
           {subtasks.length === 0 && (
-            <div className="text-xs text-ink-faint">{t("tasks.noSubtasks")}</div>
+            <div className="text-xs text-fg-3">{t("tasks.noSubtasks")}</div>
           )}
           {subtasks.map((s) => (
             <div key={s.id} className="group flex items-center gap-2">
@@ -488,15 +488,15 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
                 disabled={s.status === "COMPLETED"}
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                   s.status === "COMPLETED"
-                    ? "border-success bg-success/20 text-success"
-                    : "border-ink-faint text-transparent hover:border-accent"
+                    ? "border-success bg-success-bg text-success"
+                    : "border-border-strong text-transparent hover:border-accent"
                 }`}
               >
                 <IconCheck size={11} />
               </button>
               <span
                 className={`flex-1 text-sm ${
-                  s.status === "COMPLETED" ? "text-ink-faint line-through" : "text-ink-soft"
+                  s.status === "COMPLETED" ? "text-fg-3 line-through" : "text-fg-2"
                 }`}
               >
                 {s.title}
@@ -507,7 +507,7 @@ export function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => 
               <button
                 onClick={() => detachSubtask(s.id)}
                 title={t("common.delete")}
-                className="text-ink-faint opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                className="text-fg-3 opacity-0 transition group-hover:opacity-100 hover:text-danger"
               >
                 <IconTrash size={13} />
               </button>

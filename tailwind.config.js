@@ -1,68 +1,89 @@
 /** @type {import('tailwindcss').Config} */
+//
+// QuestForge redesign — cream / warm-dark palette.
+//
+// Every color reads from a CSS variable defined in src/index.css so both light
+// and dark themes flip with a single class swap. The palette is intentionally
+// quiet: one warm terracotta accent, no gradients, no glow, hairline borders
+// (1px on light, 1.5px focus ring). Two typefaces — Instrument Sans for UI,
+// JetBrains Mono for numbers/time/dates.
+//
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        // Dark-fantasy HUD palette — muted, modern, subtle glow accents.
-        bg: {
-          DEFAULT: "#0d0f17",
-          soft: "#141824",
-          card: "#181d2b",
-          elevated: "#1f2536",
-        },
-        border: {
-          DEFAULT: "#272e42",
-          soft: "#20263700",
-        },
-        ink: {
-          DEFAULT: "#e6e9f2",
-          soft: "#9aa3bd",
-          faint: "#5f6883",
-        },
+        bg: "var(--bg)",
+        surface: "var(--surface)",
+        "surface-2": "var(--surface-2)",
+        border: "var(--border-c)",
+        "border-strong": "var(--border-strong)",
+        sidebar: "var(--sidebar-bg)",
+        fg: "var(--fg)",
+        "fg-2": "var(--fg-2)",
+        "fg-3": "var(--fg-3)",
         accent: {
-          // Arcane amber — primary progression color.
-          DEFAULT: "#d9a441",
-          soft: "#b98a34",
-          glow: "#f0c264",
+          DEFAULT: "var(--accent)",
+          bg: "var(--accent-bg)",
+          fg: "var(--accent-fg)",
         },
-        arcane: {
-          // Secondary magical accent.
-          DEFAULT: "#6f8cff",
-          soft: "#5570d6",
+        success: {
+          DEFAULT: "var(--success)",
+          bg: "var(--success-bg)",
         },
-        success: "#5bbf82",
-        danger: "#d3596b",
-        warn: "#e0a13c",
-        streak: "#f0803c",
+        danger: {
+          DEFAULT: "var(--danger)",
+          bg: "var(--danger-bg)",
+        },
+        warn: {
+          DEFAULT: "var(--warn)",
+          bg: "var(--warn-bg)",
+        },
       },
       fontFamily: {
-        display: ["'Cinzel'", "'Trajan Pro'", "Georgia", "serif"],
-        sans: ["'Inter'", "system-ui", "sans-serif"],
-        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        sans: [
+          "'Instrument Sans'",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        mono: [
+          "'JetBrains Mono'",
+          "ui-monospace",
+          "Consolas",
+          "monospace",
+        ],
+      },
+      borderRadius: {
+        sm: "3px",
+        DEFAULT: "5px",
+        md: "5px",
+        lg: "8px",
+        xl: "10px",
       },
       boxShadow: {
-        glow: "0 0 20px -4px rgba(217, 164, 65, 0.35)",
-        "glow-arcane": "0 0 20px -4px rgba(111, 140, 255, 0.35)",
-        card: "0 8px 24px -12px rgba(0, 0, 0, 0.6)",
+        // Very restrained shadows — used sparingly, only for elevation of
+        // floating surfaces (modals, popovers, active tab pills). No colored
+        // glow anywhere — depth is expressed with hairlines instead.
+        DEFAULT: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        card: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        pop: "0 8px 24px -12px rgba(0, 0, 0, 0.18)",
       },
       keyframes: {
-        "level-up": {
-          "0%": { transform: "scale(0.8)", opacity: "0" },
-          "40%": { transform: "scale(1.05)", opacity: "1" },
-          "100%": { transform: "scale(1)", opacity: "1" },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(2px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
         "xp-pop": {
-          "0%": { transform: "translateY(6px)", opacity: "0" },
+          "0%": { transform: "translateY(4px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
-        },
-        "bar-fill": {
-          from: { width: "0%" },
         },
       },
       animation: {
-        "level-up": "level-up 0.5s ease-out",
-        "xp-pop": "xp-pop 0.3s ease-out",
+        "fade-in": "fade-in 150ms ease-out",
+        "xp-pop": "xp-pop 200ms ease-out",
       },
     },
   },

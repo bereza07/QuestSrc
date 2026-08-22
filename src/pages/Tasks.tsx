@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useT, useI18nStore } from "@/i18n";
 import { TaskItem } from "@/components/TaskItem";
-import { IconPlus } from "@/components/icons";
+import { IconPlus, IconSearch, IconChevronDown } from "@/components/icons";
 import { DIFFICULTIES, type Difficulty, type StatReward } from "@/types";
 import { XP_BANDS, totalXpFromRewards, normalizeStatRewards } from "@/domain/xp";
 import { overdueTasks } from "@/services/statistics/statisticsService";
@@ -12,66 +12,136 @@ export function Tasks() {
   const t = useT();
   const lang = useI18nStore((s) => s.lang);
   const activeTasks = useAppStore((s) => s.activeTasks);
+  const projects = useAppStore((s) => s.projects);
   const [showForm, setShowForm] = useState(false);
 
-  const overdue = useMemo(() => overdueTasks(activeTasks), [activeTasks]);
+  // Toolbar filters: search over titles + project select.
+  const [search, setSearch] = useState("");
+  const [filterProject, setFilterProject] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return activeTasks.filter((task) => {
+      if (q && !task.title.toLowerCase().includes(q)) return false;
+      if (filterProject === "__none__" && task.projectId != null) return false;
+      if (filterProject && filterProject !== "__none__" && task.projectId !== filterProject)
+        return false;
+      return true;
+    });
+  }, [activeTasks, search, filterProject]);
+
+  const overdue = useMemo(() => overdueTasks(filtered), [filtered]);
   const overdueIds = useMemo(() => new Set(overdue.map((o) => o.id)), [overdue]);
 
-  // Group the remaining open quests by planned day (overdue shown separately).
   const groups = useMemo(() => {
-    const map = new Map<string, typeof activeTasks>();
-    for (const task of activeTasks) {
+    const map = new Map<string, typeof filtered>();
+    for (const task of filtered) {
       if (overdueIds.has(task.id)) continue;
       const key = task.plannedDate ?? "none";
       const list = map.get(key) ?? [];
       list.push(task);
       map.set(key, list);
     }
-    // Sort: dated ascending, "Someday" last.
     return Array.from(map.entries()).sort(([a], [b]) => {
       if (a === "none") return 1;
       if (b === "none") return -1;
       return a < b ? -1 : 1;
     });
-  }, [activeTasks, overdueIds]);
+  }, [filtered, overdueIds]);
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="qf-heading text-2xl text-ink">{t("tasks.title")}</h1>
-        <button
-          className="qf-btn-primary"
-          onClick={() => setShowForm((v) => !v)}
-        >
-          <IconPlus size={16} /> {t("tasks.newQuest")}
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-fg">{t("tasks.title")}</h1>
+          <p className="mt-0.5 text-sm text-fg-3">
+            {t("tasks.openCount", { n: activeTasks.length })}
+          </p>
+        </div>
+        <button className="qf-btn-primary" onClick={() => setShowForm((v) => !v)}>
+          <IconPlus size={14} /> {t("tasks.newQuest")}
         </button>
+      </div>
+
+      {/* Toolbar: search + project filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[14rem]">
+          <IconSearch
+            size={13}
+            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-3"
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("tasks.searchPlaceholder")}
+            className="qf-input pl-8"
+          />
+        </div>
+        <select
+          value={filterProject}
+          onChange={(e) => setFilterProject(e.target.value)}
+          className="qf-input w-auto min-w-[10rem] max-w-full pr-8"
+        >
+          <option value="">{t("goals.allProjects")}</option>
+          <option value="__none__">{t("goals.noProject")}</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {showForm && <NewQuestForm onDone={() => setShowForm(false)} />}
 
       {overdue.length > 0 && <OverdueSection tasks={overdue} />}
 
-      <div className="mt-6 space-y-6">
-        {activeTasks.length === 0 && !showForm && (
-          <div className="qf-card py-16 text-center text-sm text-ink-faint">
-            {t("tasks.noOpenQuests")}
+      <div className="mt-4">
+        {filtered.length === 0 && !showForm && (
+          <div className="qf-card py-16 text-center text-sm text-fg-3">
+            {activeTasks.length === 0 ? t("tasks.noOpenQuests") : t("tasks.noMatch")}
           </div>
         )}
         {groups.map(([key, tasks]) => (
-          <section key={key} className="qf-card p-5">
-            <div className="qf-label mb-2">
-              {key === "none"
-                ? t("common.someday")
-                : relativeDayLabel(key, t, lang)}
-            </div>
-            <div className="space-y-0.5">
-              {tasks.map((t) => (
-                <TaskItem key={t.id} task={t} />
-              ))}
-            </div>
-          </section>
+          <QuestGroup
+            key={key}
+            label={key === "none" ? t("common.someday") : relativeDayLabel(key, t, lang)}
+            tasks={tasks}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+// Collapsible section header + task rows. Section titles are quiet (small caps,
+// muted) so the task rows themselves lead the eye.
+function QuestGroup({ label, tasks }: { label: string; tasks: import("@/types").Task[] }) {
+  const [open, setOpen] = useState(true);
+  if (tasks.length === 0) return null;
+  return (
+    <div className="mb-5">
+      <button
+        onClick={() => setOpen(!open)}
+        className="mb-1.5 flex w-full items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-fg-3 transition-colors hover:text-fg"
+      >
+        <IconChevronDown
+          size={12}
+          className={`transition-transform ${open ? "" : "-rotate-90"}`}
+        />
+        {label}
+        <span className="ml-1 font-mono normal-case tracking-normal">
+          {tasks.length}
+        </span>
+      </button>
+      {open && (
+        <div>
+          {tasks.map((task) => (
+            <TaskItem key={task.id} task={task} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -84,34 +154,34 @@ function OverdueSection({ tasks }: { tasks: ReturnType<typeof overdueTasks> }) {
   const completeTask = useAppStore((s) => s.completeTask);
 
   return (
-    <section className="qf-card mt-4 border-danger/30 p-5">
+    <section className="qf-card mt-4 border-danger p-5">
       <div className="qf-label text-danger">{t("tasks.overdue")}</div>
-      <p className="mt-0.5 text-[11px] text-ink-faint">{t("tasks.overdueHint")}</p>
+      <p className="mt-0.5 text-[11px] text-fg-3">{t("tasks.overdueHint")}</p>
       <div className="mt-3 space-y-2">
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-bg-soft/40 px-3 py-2"
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2"
           >
-            <span className="flex-1 text-sm text-ink">{task.title}</span>
+            <span className="flex-1 text-sm text-fg">{task.title}</span>
             <span className="text-[11px] text-danger">
               {relativeDayLabel(task.plannedDate, t, lang)}
             </span>
             <div className="flex gap-1.5">
               <button
-                className="rounded-md border border-border px-2 py-1 text-xs text-ink-soft hover:border-accent hover:text-accent"
+                className="rounded-md border border-border px-2 py-1 text-xs text-fg-2 hover:border-accent hover:text-accent"
                 onClick={() => reschedule(task.id, todayKey())}
               >
                 {t("tasks.moveToToday")}
               </button>
               <button
-                className="rounded-md border border-success/40 px-2 py-1 text-xs text-success hover:bg-success/10"
+                className="rounded-md border border-success px-2 py-1 text-xs text-success hover:bg-success-bg"
                 onClick={() => completeTask(task.id)}
               >
                 ✓
               </button>
               <button
-                className="rounded-md border border-border px-2 py-1 text-xs text-ink-faint hover:border-danger hover:text-danger"
+                className="rounded-md border border-border px-2 py-1 text-xs text-fg-3 hover:border-danger hover:text-danger"
                 onClick={() => cancelTask(task.id)}
               >
                 {t("tasks.markCancelled")}
@@ -262,7 +332,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
 
       <div className="mt-3">
         <label className="qf-label">{t("tasks.images")}</label>
-        <p className="mt-0.5 text-[11px] text-ink-faint">{t("tasks.imagesHint")}</p>
+        <p className="mt-0.5 text-[11px] text-fg-3">{t("tasks.imagesHint")}</p>
         {images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {images.map((src, i) => (
@@ -275,7 +345,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
                 <button
                   type="button"
                   onClick={() => setImages((p) => p.filter((_, j) => j !== i))}
-                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-bg text-[10px] text-ink-soft hover:text-danger"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-bg text-[10px] text-fg-2 hover:text-danger"
                   aria-label="remove"
                 >
                   ×
@@ -398,7 +468,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
       <div className="mt-4">
         <label className="qf-label">{t("tasks.statRewards")}</label>
         {stats.length === 0 ? (
-          <div className="mt-1 text-xs text-ink-faint">
+          <div className="mt-1 text-xs text-fg-3">
             {t("tasks.noStatsYet")}
           </div>
         ) : (
@@ -412,8 +482,8 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
                     onClick={() => toggleStat(stat.id)}
                     className={`rounded-full border px-3 py-1 text-sm transition ${
                       on
-                        ? "border-accent bg-accent/15 text-accent-glow"
-                        : "border-border text-ink-soft hover:border-ink-faint"
+                        ? "border-accent bg-accent-bg text-accent"
+                        : "border-border text-fg-2 hover:border-border-strong"
                     }`}
                   >
                     {stat.name}
@@ -426,7 +496,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
                       onChange={(e) =>
                         setRewardXp(stat.id, Number(e.target.value))
                       }
-                      className="w-16 rounded-lg border border-border bg-bg-soft px-2 py-1 text-xs text-ink"
+                      className="w-16 rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs text-fg"
                     />
                   )}
                 </div>
@@ -434,7 +504,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
             })}
           </div>
         )}
-        <div className="mt-2 text-xs text-ink-faint">
+        <div className="mt-2 text-xs text-fg-3">
           {t("tasks.totalXp")}:{" "}
           <span className="font-mono text-accent">{clampedTotal}</span>
           {rawTotal !== clampedTotal && (
@@ -454,12 +524,12 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
         {criteria.length > 0 && (
           <ul className="mt-2 space-y-1">
             {criteria.map((c, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-ink-soft">
-                <span className="text-ink-faint">☐</span>
+              <li key={i} className="flex items-center gap-2 text-sm text-fg-2">
+                <span className="text-fg-3">☐</span>
                 <span className="flex-1">{c}</span>
                 <button
                   type="button"
-                  className="text-ink-faint hover:text-danger"
+                  className="text-fg-3 hover:text-danger"
                   onClick={() => setCriteria((p) => p.filter((_, j) => j !== i))}
                 >
                   ✕
@@ -490,16 +560,16 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
       {/* Sub-quests */}
       <div className="mt-4">
         <label className="qf-label">{t("tasks.subtasks")}</label>
-        <p className="mt-0.5 text-[11px] text-ink-faint">{t("tasks.subtasksHint")}</p>
+        <p className="mt-0.5 text-[11px] text-fg-3">{t("tasks.subtasksHint")}</p>
         {(subtasks.length > 0 || attachIds.length > 0) && (
           <ul className="mt-2 space-y-1">
             {subtasks.map((s, i) => (
-              <li key={`n${i}`} className="flex items-center gap-2 text-sm text-ink-soft">
+              <li key={`n${i}`} className="flex items-center gap-2 text-sm text-fg-2">
                 <span className="text-accent">＋</span>
                 <span className="flex-1">{s}</span>
                 <button
                   type="button"
-                  className="text-ink-faint hover:text-danger"
+                  className="text-fg-3 hover:text-danger"
                   onClick={() => setSubtasks((p) => p.filter((_, j) => j !== i))}
                 >
                   ✕
@@ -509,12 +579,12 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
             {attachIds.map((id) => {
               const tk = activeTasks.find((x) => x.id === id);
               return (
-                <li key={id} className="flex items-center gap-2 text-sm text-ink-soft">
-                  <span className="text-arcane">↳</span>
+                <li key={id} className="flex items-center gap-2 text-sm text-fg-2">
+                  <span className="text-accent">↳</span>
                   <span className="flex-1">{tk?.title ?? id}</span>
                   <button
                     type="button"
-                    className="text-ink-faint hover:text-danger"
+                    className="text-fg-3 hover:text-danger"
                     onClick={() => setAttachIds((p) => p.filter((x) => x !== id))}
                   >
                     ✕

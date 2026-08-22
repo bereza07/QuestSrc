@@ -108,8 +108,8 @@ export function Onboarding() {
               onClick={() => setLang(l)}
               className={`rounded-full px-3 py-1 text-xs transition ${
                 lang === l
-                  ? "bg-accent/15 text-accent"
-                  : "text-ink-faint hover:text-ink-soft"
+                  ? "bg-accent-bg text-accent"
+                  : "text-fg-3 hover:text-fg-2"
               }`}
             >
               {LANG_LABELS[l]}
@@ -117,10 +117,10 @@ export function Onboarding() {
           ))}
         </div>
         <div className="mt-4 text-center">
-          <div className="qf-heading text-3xl text-accent-glow">
+          <div className="text-2xl font-semibold tracking-tight text-fg">
             {t("onboarding.welcome")}
           </div>
-          <p className="mt-2 text-sm text-ink-soft">{t("onboarding.subtitle")}</p>
+          <p className="mt-2 text-sm text-fg-2">{t("onboarding.subtitle")}</p>
         </div>
 
         {/* Returning user on a new device: sign in and pull existing data. */}
@@ -173,7 +173,7 @@ export function Onboarding() {
                   {t("common.cancel")}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-ink-faint">{t("onboarding.orCreateNew")}</p>
+              <p className="mt-2 text-xs text-fg-3">{t("onboarding.orCreateNew")}</p>
             </div>
           )}
         </div>
@@ -219,8 +219,8 @@ export function Onboarding() {
                   onClick={() => toggle(stat)}
                   className={`rounded-full border px-3 py-1 text-sm transition ${
                     on
-                      ? "border-accent bg-accent/15 text-accent-glow"
-                      : "border-border text-ink-soft hover:border-ink-faint"
+                      ? "border-accent bg-accent-bg text-accent"
+                      : "border-border text-fg-2 hover:border-border-strong"
                   }`}
                 >
                   {labelFor(stat)}
@@ -253,7 +253,7 @@ export function Onboarding() {
           >
             {busy ? t("onboarding.forging") : t("onboarding.begin")}
           </button>
-          <p className="mt-3 text-center text-xs text-ink-faint">
+          <p className="mt-3 text-center text-xs text-fg-3">
             {t("onboarding.footnote")}
           </p>
         </div>

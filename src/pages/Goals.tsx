@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useT } from "@/i18n";
 import { ProgressBar } from "@/components/ProgressBar";
-import { IconPlus, IconGoals, IconTrash, IconCheck } from "@/components/icons";
+import { IconPlus, IconGoals, IconTrash, IconCheck, IconEdit, IconX } from "@/components/icons";
 import { relativeDayLabel } from "@/utils/date";
 import { useI18nStore } from "@/i18n";
 import type { Goal } from "@/data/repositories/goalRepo";
@@ -60,12 +60,12 @@ export function Goals() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="qf-heading text-2xl text-ink">{t("goals.title")}</h1>
+        <h1 className="text-xl font-semibold text-fg">{t("goals.title")}</h1>
         <div className="flex items-center gap-3">
           {completedCount > 0 && (
             <button
               type="button"
-              className="text-xs text-ink-faint hover:text-ink-soft"
+              className="text-xs text-fg-3 hover:text-fg-2"
               onClick={toggleShowCompleted}
             >
               {showCompleted
@@ -109,7 +109,7 @@ export function Goals() {
 
       <div className="mt-6 space-y-3">
         {visibleGoals.length === 0 && !showGoalForm && (
-          <div className="qf-card py-16 text-center text-sm text-ink-faint">
+          <div className="qf-card py-16 text-center text-sm text-fg-3">
             {goals.length === 0 ? t("goals.empty") : t("goals.allDone")}
           </div>
         )}
@@ -123,24 +123,24 @@ export function Goals() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     {g.isMainQuest && (
-                      <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] uppercase tracking-wider text-accent-glow">
+                      <span className="rounded-full bg-accent-bg px-2 py-0.5 text-[11px] uppercase tracking-wider text-accent">
                         ★ {t("goals.mainQuest")}
                       </span>
                     )}
-                    <IconGoals size={16} className="text-ink-faint" />
-                    <h2 className={`truncate text-base font-medium ${g.completedAt ? "text-ink-faint line-through" : "text-ink"}`}>
+                    <IconGoals size={16} className="text-fg-3" />
+                    <h2 className={`truncate text-base font-medium ${g.completedAt ? "text-fg-3 line-through" : "text-fg"}`}>
                       {g.title}
                     </h2>
                     {g.completedAt && (
-                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-success">
+                      <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] uppercase tracking-wider text-success">
                         ✓ {t("goals.completed")}
                       </span>
                     )}
                   </div>
                   {g.description && (
-                    <p className="mt-1 text-sm text-ink-soft">{g.description}</p>
+                    <p className="mt-1 text-sm text-fg-2">{g.description}</p>
                   )}
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-ink-faint">
+                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-fg-3">
                     {project && <span>· {project.name}</span>}
                     {g.deadline && (
                       <span>
@@ -175,7 +175,7 @@ export function Goals() {
                     )}
                   </button>
                   <button
-                    className="rounded-md p-2 text-ink-faint hover:text-danger"
+                    className="rounded-md p-2 text-fg-3 hover:text-danger"
                     onClick={() => repos?.goals.delete(g.id).then(refresh)}
                     aria-label={t("common.delete")}
                   >
@@ -185,7 +185,7 @@ export function Goals() {
               </div>
 
               <div className="mt-3">
-                <div className="mb-1 flex justify-between text-xs text-ink-faint">
+                <div className="mb-1 flex justify-between text-xs text-fg-3">
                   <span>{t("goals.progress")}</span>
                   <span className="font-mono">
                     {t("goals.completedOf", { done: p.done, total: p.total })}
@@ -241,12 +241,12 @@ function ProjectsCard() {
       <div className="qf-label">{t("projects.title")}</div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {projects.length === 0 && (
-          <span className="text-xs text-ink-faint">{t("projects.empty")}</span>
+          <span className="text-xs text-fg-3">{t("projects.empty")}</span>
         )}
         {projects.map((p) => (
           <span
             key={p.id}
-            className="group flex items-center gap-1 rounded-full border border-border px-3 py-1 text-sm text-ink-soft"
+            className="group flex items-center gap-1 rounded-full border border-border px-3 py-1 text-sm text-fg-2"
             title={p.description ?? ""}
           >
             {p.name}
@@ -255,24 +255,24 @@ function ProjectsCard() {
                 setDescDraft(p.description ?? "");
                 setEditingDesc((cur) => (cur === p.id ? null : p.id));
               }}
-              className="ml-1 text-[10px] text-ink-faint opacity-70 hover:text-accent"
+              className="ml-1 text-fg-3 opacity-70 hover:text-accent"
               aria-label={t("common.edit")}
             >
-              ✎
+              <IconEdit size={12} />
             </button>
             <button
               onClick={() => repos?.projects.delete(p.id).then(refresh)}
-              className="text-ink-faint opacity-0 transition group-hover:opacity-100 hover:text-danger"
+              className="text-fg-3 opacity-0 transition group-hover:opacity-100 hover:text-danger"
               aria-label={t("common.delete")}
             >
-              ×
+              <IconX size={12} />
             </button>
           </span>
         ))}
       </div>
 
       {editingDesc && (
-        <div className="mt-3 rounded-lg border border-border bg-bg-soft/50 p-3">
+        <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
           <label className="qf-label">{t("projects.descriptionLabel")}</label>
           <textarea
             value={descDraft}
@@ -390,7 +390,7 @@ function NewGoalForm({ onDone }: { onDone: () => void }) {
           </div>
         )}
       </div>
-      <label className="mt-3 flex items-center gap-2 text-sm text-ink-soft">
+      <label className="mt-3 flex items-center gap-2 text-sm text-fg-2">
         <input
           type="checkbox"
           checked={isMainQuest}
@@ -442,7 +442,7 @@ function EditGoalForm({ goal, onDone }: { goal: Goal; onDone: () => void }) {
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-border bg-bg-soft/50 p-3">
+    <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}

@@ -89,7 +89,7 @@ export function Character() {
 
   return (
     <div>
-      <h1 className="qf-heading text-2xl text-ink">{t("character.title")}</h1>
+      <h1 className="text-xl font-semibold text-fg">{t("character.title")}</h1>
 
       <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Portrait + level */}
@@ -99,7 +99,8 @@ export function Character() {
               type="button"
               onClick={() => avatarInputRef.current?.click()}
               title={t("character.changeAvatar")}
-              className="group relative h-24 w-24 overflow-hidden rounded-full border border-accent/40 bg-bg-soft shadow-glow"
+              className="group relative h-24 w-24 overflow-hidden rounded-lg"
+              style={{ background: "var(--accent)" }}
             >
               {character.avatar ? (
                 <img
@@ -108,11 +109,11 @@ export function Character() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="flex h-full w-full items-center justify-center text-3xl text-accent-glow qf-heading">
+                <span className="flex h-full w-full items-center justify-center text-3xl font-semibold text-accent-fg">
                   {character.name.charAt(0).toUpperCase()}
                 </span>
               )}
-              <span className="absolute inset-x-0 bottom-0 bg-bg/80 py-0.5 text-[10px] text-ink-soft opacity-0 transition group-hover:opacity-100">
+              <span className="absolute inset-x-0 bottom-0 bg-surface py-0.5 text-[10px] text-fg-2 opacity-0 transition group-hover:opacity-100">
                 {t("character.changeAvatar")}
               </span>
             </button>
@@ -126,16 +127,16 @@ export function Character() {
             {character.avatar && (
               <button
                 onClick={() => saveAvatar(null)}
-                className="mt-1 text-[11px] text-ink-faint hover:text-danger"
+                className="mt-1 text-[11px] text-fg-3 hover:text-danger"
               >
                 {t("character.removeAvatar")}
               </button>
             )}
-            <div className="mt-3 qf-heading text-xl text-ink">
+            <div className="mt-3 text-lg font-semibold text-fg">
               {character.name}
             </div>
             {character.characterClass && (
-              <div className="text-sm text-ink-soft">
+              <div className="text-sm text-fg-2">
                 {character.characterClass}
               </div>
             )}
@@ -148,7 +149,7 @@ export function Character() {
               value={progress.currentXp / progress.requiredXp}
               height={10}
             />
-            <div className="mt-1 flex justify-between text-xs font-mono text-ink-faint">
+            <div className="mt-1 flex justify-between text-xs font-mono text-fg-3">
               <span>
                 {progress.currentXp} / {progress.requiredXp}
               </span>
@@ -170,7 +171,7 @@ export function Character() {
           </div>
 
           {adding && (
-            <div className="mt-3 rounded-lg border border-border bg-bg-soft/50 p-3">
+            <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
               {stats.length >= STAT_SOFT_CAP && (
                 <div className="mb-2 text-xs text-warn">
                   {t("character.softCapWarning", { count: stats.length })}
@@ -208,7 +209,7 @@ export function Character() {
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {stats.length === 0 && (
-              <div className="text-sm text-ink-faint">
+              <div className="text-sm text-fg-3">
                 {t("character.noStatsYet")}
               </div>
             )}
@@ -218,15 +219,15 @@ export function Character() {
                 onClick={() => setSelected(stat)}
                 className={`rounded-lg border p-3 text-left transition ${
                   selected?.id === stat.id
-                    ? "border-accent/50 bg-accent/5"
-                    : "border-border hover:border-ink-faint"
+                    ? "border-accent bg-accent-bg"
+                    : "border-border hover:border-border-strong"
                 }`}
               >
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-medium text-ink">
+                  <span className="text-sm font-medium text-fg">
                     {stat.name}
                   </span>
-                  <span className="text-xs text-ink-soft">
+                  <span className="text-xs text-fg-2">
                     {t("character.level")} {stat.level}
                   </span>
                 </div>
@@ -236,7 +237,7 @@ export function Character() {
                   height={6}
                   tone="arcane"
                 />
-                <div className="mt-1 text-right text-[11px] font-mono text-ink-faint">
+                <div className="mt-1 text-right text-[11px] font-mono text-fg-3">
                   {stat.currentXp} / {xpForLevel(stat.level)}
                 </div>
               </button>
@@ -250,14 +251,14 @@ export function Character() {
         <section className="qf-card mt-6 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="qf-heading text-lg text-ink">{selected.name}</div>
+              <div className="qf-heading text-lg text-fg">{selected.name}</div>
               {selected.description && (
-                <div className="text-sm text-ink-soft">
+                <div className="text-sm text-fg-2">
                   {selected.description}
                 </div>
               )}
             </div>
-            <div className="text-right text-sm text-ink-soft">
+            <div className="text-right text-sm text-fg-2">
               {t("character.level")} {selected.level} · {selected.totalXp} XP{" "}
               {t("common.total")}
             </div>
@@ -266,16 +267,16 @@ export function Character() {
             <span className="qf-label">{t("character.recentXp")}</span>
             <div className="mt-2 space-y-1.5">
               {recent.length === 0 ? (
-                <div className="text-xs text-ink-faint">{t("character.noXpYet")}</div>
+                <div className="text-xs text-fg-3">{t("character.noXpYet")}</div>
               ) : (
                 recent.map((x) => (
                   <div
                     key={x.id}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="truncate text-ink-soft">{x.reason}</span>
+                    <span className="truncate text-fg-2">{x.reason}</span>
                     <span className="ml-3 flex shrink-0 items-center gap-3">
-                      <span className="text-[11px] text-ink-faint">
+                      <span className="text-[11px] text-fg-3">
                         {relativeDayLabel(x.createdAt.slice(0, 10), t, lang)}
                       </span>
                       <span className="font-mono text-accent">+{x.amount}</span>

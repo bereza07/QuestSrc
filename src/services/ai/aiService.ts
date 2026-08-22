@@ -724,8 +724,7 @@ export async function sendAIMessage(
       if (verdict) {
         actions = verdict.actions;
         if (verdict.notes) {
-          const prefix = lang === "ru" ? "🛡 " : "🛡 ";
-          messageText = (messageText ? messageText.trim() + "\n\n" : "") + prefix + verdict.notes;
+          messageText = (messageText ? messageText.trim() + "\n\n" : "") + verdict.notes;
         }
       }
     }
@@ -738,7 +737,7 @@ export async function sendAIMessage(
       const dedup = await dedupExistingCreations(repos, actions, lang);
       if (dedup.notes) {
         messageText =
-          (messageText ? messageText.trim() + "\n\n" : "") + "🛡 " + dedup.notes;
+          (messageText ? messageText.trim() + "\n\n" : "") + "" + dedup.notes;
       }
       actions = dedup.actions;
     }
@@ -847,7 +846,7 @@ export async function sendAIMessage(
     if (verdict) {
       parsed.actions = verdict.actions;
       if (verdict.notes) {
-        parsed.message = (parsed.message ? parsed.message.trim() + "\n\n" : "") + "🛡 " + verdict.notes;
+        parsed.message = (parsed.message ? parsed.message.trim() + "\n\n" : "") + "" + verdict.notes;
       }
     }
   }
@@ -856,7 +855,7 @@ export async function sendAIMessage(
   {
     const dedup = await dedupExistingCreations(repos, parsed.actions, lang);
     if (dedup.notes) {
-      parsed.message = (parsed.message ? parsed.message.trim() + "\n\n" : "") + "🛡 " + dedup.notes;
+      parsed.message = (parsed.message ? parsed.message.trim() + "\n\n" : "") + "" + dedup.notes;
     }
     parsed.actions = dedup.actions;
   }

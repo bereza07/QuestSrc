@@ -181,11 +181,11 @@ export function ImageViewer({ src, onClose }: Props) {
 
       {/* Controls */}
       <div
-        className="fixed bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-bg-elevated/95 px-2 py-1 backdrop-blur"
+        className="fixed bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-surface-2 px-2 py-1 backdrop-blur"
         onClick={(e) => e.stopPropagation()}
       >
         <IconBtn label="−" title="Zoom out (−)" onClick={() => apply(clamp(scaleRef.current / STEP), txRef.current, tyRef.current)} />
-        <span className="w-14 text-center font-mono text-xs text-ink-soft">
+        <span className="w-14 text-center font-mono text-xs text-fg-2">
           {Math.round(scale * 100)}%
         </span>
         <IconBtn label="+" title="Zoom in (+)" onClick={() => apply(clamp(scaleRef.current * STEP), txRef.current, tyRef.current)} />
@@ -197,7 +197,7 @@ export function ImageViewer({ src, onClose }: Props) {
       <button
         onClick={onClose}
         aria-label="Close"
-        className="fixed right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-elevated/95 text-ink-soft hover:text-ink"
+        className="fixed right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-2 text-fg-2 hover:text-fg"
       >
         ×
       </button>
@@ -219,7 +219,7 @@ function IconBtn({
       type="button"
       title={title}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-ink-soft hover:text-accent-glow"
+      className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-fg-2 hover:text-accent"
     >
       {label}
     </button>

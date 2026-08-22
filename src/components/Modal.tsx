@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { IconX } from "./icons";
 
 interface ModalProps {
   title: string;
@@ -7,7 +8,7 @@ interface ModalProps {
   wide?: boolean;
 }
 
-/** Centered dialog with a scrim. Closes on backdrop click or Escape. */
+/** Centered dialog with a subtle scrim. Closes on backdrop click or Escape. */
 export function Modal({ title, onClose, children, wide }: ModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -19,24 +20,24 @@ export function Modal({ title, onClose, children, wide }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm sm:p-8"
       onMouseDown={onClose}
     >
       <div
-        className={`qf-card my-auto w-full ${wide ? "max-w-3xl" : "max-w-xl"} p-6`}
+        className={`my-auto w-full ${wide ? "max-w-3xl" : "max-w-xl"} animate-fade-in rounded-lg border border-border bg-surface shadow-pop`}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="qf-heading text-lg text-ink">{title}</h2>
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2 className="text-base font-semibold text-fg">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-md px-2 text-xl leading-none text-ink-faint hover:text-ink"
+            className="rounded-md p-1 text-fg-3 transition-colors hover:bg-surface-2 hover:text-fg"
             aria-label="Close"
           >
-            ×
+            <IconX size={14} />
           </button>
         </div>
-        {children}
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
