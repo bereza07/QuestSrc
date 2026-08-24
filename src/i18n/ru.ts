@@ -310,7 +310,9 @@ export const ru: Messages = {
     syncWipe: "Стереть мои данные на сервере",
     syncWipeConfirm: "Удалить твой набор данных на сервере? Локальные данные останутся; выгрузить их снова можно в любой момент.",
     syncWiped: "Данные на сервере очищены.",
+    syncWipeFailed: "Не удалось стереть данные на сервере.",
     syncDeleteAccount: "Удалить мой аккаунт на сервере",
+    syncDeleteAccountFailed: "Не удалось удалить аккаунт.",
     syncDeleteAccountConfirm: "Безвозвратно удалить аккаунт и данные на сервере? Это нельзя отменить.",
     syncDeletedAccount: "Аккаунт удалён на сервере.",
     syncConflict:

@@ -13,6 +13,7 @@ export function Welcome() {
   const setLang = useI18nStore((s) => s.setLang);
   const repos = useAppStore((s) => s.repos);
   const refresh = useAppStore((s) => s.refresh);
+  const completeFromSync = useAppStore((s) => s.completeOnboardingFromSync);
   const sync = useSyncStore();
 
   const [mode, setMode] = useState<"choose" | "new" | "signin">("choose");
@@ -30,14 +31,14 @@ export function Welcome() {
       if (kind === "register") await sync.register(email.trim(), password);
       else await sync.login(email.trim(), password);
       sync.setAutoSync(true);
-      const had = await sync.pull(repos);
-      if (had) {
-        await refresh();
-        // A pulled character means we're done — the app will re-render into ready.
-        return;
-      }
-      // No server data yet — fall through to normal onboarding, then autoSync
-      // will push after character creation.
+      // completeOnboardingFromSync pulls + flips app status → "ready" (or stays
+      // needs-onboarding if the server had no data). Without it, we'd stay
+      // stuck on the Welcome screen even after a successful login.
+      const ok = await completeFromSync();
+      if (ok) return; // app re-renders into the main layout
+      // Server was empty — send the user into normal onboarding; auto-sync will
+      // push their new character up after they finish.
+      await refresh();
       setMode("new");
     } catch (e) {
       setError(

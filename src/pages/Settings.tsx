@@ -496,8 +496,17 @@ function SyncSettings() {
               className="text-xs text-danger hover:underline"
               onClick={async () => {
                 if (!window.confirm(t("settings.syncWipeConfirm"))) return;
-                await sync.wipeServerData();
-                push({ kind: "info", title: t("settings.syncWiped") });
+                try {
+                  await sync.wipeServerData();
+                  push({ kind: "info", title: t("settings.syncWiped") });
+                } catch (e) {
+                  const msg = e instanceof Error ? e.message : String(e);
+                  push({
+                    kind: "error",
+                    title: t("settings.syncWipeFailed"),
+                    detail: msg === "__UNREACHABLE__" ? t("settings.syncUnreachable") : msg,
+                  });
+                }
               }}
             >
               {t("settings.syncWipe")}
@@ -507,8 +516,17 @@ function SyncSettings() {
               className="text-xs text-danger hover:underline"
               onClick={async () => {
                 if (!window.confirm(t("settings.syncDeleteAccountConfirm"))) return;
-                await sync.deleteAccount();
-                push({ kind: "info", title: t("settings.syncDeletedAccount") });
+                try {
+                  await sync.deleteAccount();
+                  push({ kind: "info", title: t("settings.syncDeletedAccount") });
+                } catch (e) {
+                  const msg = e instanceof Error ? e.message : String(e);
+                  push({
+                    kind: "error",
+                    title: t("settings.syncDeleteAccountFailed"),
+                    detail: msg === "__UNREACHABLE__" ? t("settings.syncUnreachable") : msg,
+                  });
+                }
               }}
             >
               {t("settings.syncDeleteAccount")}

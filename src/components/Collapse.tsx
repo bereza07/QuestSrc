@@ -1,55 +1,44 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 
-// Animated accordion — mounts the child immediately and animates max-height from
-// 0 → measured content height (and back), so opening/closing feels smooth
-// instead of popping. Overflow-y is auto after the animation so long content
-// still scrolls inside its parent.
+// Smooth accordion. Uses a large fixed max-height (transitions reliably in
+// every browser, unlike grid-template-rows or 'auto') and a pre-warm layout
+// pass on mount so the very first open doesn't jitter from a cold subtree.
+//
+// The children are always mounted; when closed we clip them with overflow
+// hidden and drop opacity. Opening is a single max-height + opacity tween.
 export function Collapse({
   open,
   children,
   duration = 220,
+  maxOpenHeight = 2000,
 }: {
   open: boolean;
   children: ReactNode;
   duration?: number;
+  /** Cap for the open-state max-height. Bump if a form ever exceeds ~2000px. */
+  maxOpenHeight?: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | "auto">(open ? "auto" : 0);
-  const [animating, setAnimating] = useState(false);
+  const inner = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const contentH = el.scrollHeight;
-    setAnimating(true);
-    if (open) {
-      // Start from 0 → measured; after transition end let it be `auto` so the
-      // content can grow (e.g. lists) without needing a new measurement.
-      setHeight(0);
-      requestAnimationFrame(() => setHeight(contentH));
-      const t = setTimeout(() => {
-        setHeight("auto");
-        setAnimating(false);
-      }, duration);
-      return () => clearTimeout(t);
-    } else {
-      // Snap current auto → measured pixel value, then in the next frame → 0.
-      setHeight(contentH);
-      requestAnimationFrame(() => setHeight(0));
-      const t = setTimeout(() => setAnimating(false), duration);
-      return () => clearTimeout(t);
-    }
-  }, [open, duration]);
+  // Pre-warm: force the browser to lay out the collapsed subtree once on
+  // mount. Reading a layout property is enough — browsers cache the result and
+  // the first real open transition then has nothing new to compute under time
+  // pressure. Without this the first click after page-load lags visibly.
+  useLayoutEffect(() => {
+    inner.current?.getBoundingClientRect();
+  }, []);
 
   return (
     <div
       style={{
-        height: typeof height === "number" ? `${height}px` : "auto",
-        overflow: animating ? "hidden" : undefined,
-        transition: `height ${duration}ms ease-out`,
+        maxHeight: open ? `${maxOpenHeight}px` : "0px",
+        opacity: open ? 1 : 0,
+        overflow: "hidden",
+        transition: `max-height ${duration}ms ease-out, opacity ${duration}ms ease-out`,
       }}
+      aria-hidden={!open}
     >
-      <div ref={ref}>{open || animating ? children : null}</div>
+      <div ref={inner}>{children}</div>
     </div>
   );
 }

@@ -307,9 +307,11 @@ export const en = {
     syncWipe: "Wipe my server data",
     syncWipeConfirm: "Delete your dataset on the server? Your local data stays; you can upload it again anytime.",
     syncWiped: "Server dataset cleared.",
+    syncWipeFailed: "Couldn't wipe server data.",
     syncDeleteAccount: "Delete my account on the server",
     syncDeleteAccountConfirm: "Permanently delete your account and dataset on the server? This can't be undone.",
     syncDeletedAccount: "Account deleted on the server.",
+    syncDeleteAccountFailed: "Couldn't delete the account.",
     syncConflict:
       "Another device pushed newer data since your last sync. Pull it first, or overwrite it with what you have now.",
     syncForcePush: "Overwrite anyway",

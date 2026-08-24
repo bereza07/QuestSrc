@@ -23,3 +23,6 @@ Thumbs.db
 # Local scratch
 .figma-import/
 scratchpad/
+
+# Runtime sync-server database (per-user data)
+server/data/

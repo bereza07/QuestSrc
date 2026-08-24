@@ -197,29 +197,26 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     }
   },
 
-  /** Wipe THIS user's dataset on the server. Called during local Reset so a
-   *  cleared device doesn't just re-download its old state on next pull. */
+  /** Wipe THIS user's dataset on the server. Throws on any server error so the
+   *  UI can surface "still there — restart server or check network" instead of
+   *  a false "wiped" toast. */
   wipeServerData: async () => {
     const { token, serverUrl } = get();
     if (!token) return;
-    try {
-      await api(serverUrl, "/data", "DELETE", token);
-      setLs(LS.last, null);
-      set({ lastSyncedAt: null });
-    } catch {
-      /* if the server is unreachable we don't block local reset */
-    }
+    const res = await api(serverUrl, "/data", "DELETE", token);
+    if (!res.ok) throw new Error(await errText(res));
+    setLs(LS.last, null);
+    set({ lastSyncedAt: null });
   },
 
-  /** Full account wipe on the server (dataset + user). Also logs out locally. */
+  /** Full account wipe on the server (dataset + user). Also logs out locally.
+   *  If the server call fails we do NOT log out locally — the account is still
+   *  live and the user needs to see the error to try again. */
   deleteAccount: async () => {
     const { token, serverUrl } = get();
     if (!token) return;
-    try {
-      await api(serverUrl, "/account", "DELETE", token);
-    } catch {
-      /* keep going — user wants to be gone */
-    }
+    const res = await api(serverUrl, "/account", "DELETE", token);
+    if (!res.ok) throw new Error(await errText(res));
     setLs(LS.token, null);
     setLs(LS.email, null);
     setLs(LS.last, null);

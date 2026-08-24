@@ -3,6 +3,7 @@ import { useAppStore } from "@/stores/appStore";
 import { useT, useI18nStore } from "@/i18n";
 import { TaskItem } from "@/components/TaskItem";
 import { Collapse } from "@/components/Collapse";
+import { Modal } from "@/components/Modal";
 import { IconPlus, IconSearch, IconChevronDown } from "@/components/icons";
 import { DIFFICULTIES, type Difficulty, type StatReward } from "@/types";
 import { XP_BANDS, totalXpFromRewards, normalizeStatRewards } from "@/domain/xp";
@@ -94,9 +95,11 @@ export function Tasks() {
         </select>
       </div>
 
-      <Collapse open={showForm}>
-        <NewQuestForm onDone={() => setShowForm(false)} />
-      </Collapse>
+      {showForm && (
+        <Modal title={t("tasks.newQuest")} onClose={() => setShowForm(false)} wide>
+          <NewQuestForm onDone={() => setShowForm(false)} />
+        </Modal>
+      )}
 
       {overdue.length > 0 && <OverdueSection tasks={overdue} />}
 
@@ -303,7 +306,7 @@ function NewQuestForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="qf-card mt-4 p-5">
+    <div>
       <input
         autoFocus
         value={title}
