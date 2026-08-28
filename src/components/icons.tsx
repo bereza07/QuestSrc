@@ -81,6 +81,7 @@ export const IconArrowRight= (p: IconProps) => (<Svg {...p}><line x1="2" y1="8" 
 export const IconTimer     = (p: IconProps) => (<Svg {...p}><circle cx="8" cy="9" r="6"/><line x1="8" y1="2.5" x2="8" y2="4"/><line x1="5.5" y1="2" x2="10.5" y2="2"/><polyline points="8,6 8,9 10,10.5"/></Svg>);
 export const IconFilter    = (p: IconProps) => (<Svg {...p}><polyline points="1.5,2 14.5,2 9,8.5 9,14 7,14 7,8.5 1.5,2"/></Svg>);
 export const IconBook      = (p: IconProps) => (<Svg {...p}><path d="M8 13.5A5 5 0 013 8.5V1.5h10v7A5 5 0 018 13.5z"/><line x1="8" y1="1.5" x2="8" y2="14"/></Svg>);
+export const IconMenu      = (p: IconProps) => (<Svg {...p}><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></Svg>);
 
 // Aliases for the old naming so existing imports still work.
 export const IconDashboard = IconGrid;

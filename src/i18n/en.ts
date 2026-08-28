@@ -35,6 +35,8 @@ export const en = {
     darkMode: "Dark mode",
     collapse: "Collapse",
     expand: "Expand",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
   },
   app: {
     loading: "Opening your quest log…",
@@ -241,6 +243,9 @@ export const en = {
     searchPlaceholder: "Search goals…",
     allProjects: "All projects",
     noProject: "Without project",
+    showMore: "Show more",
+    showLess: "Show less",
+    setMainShort: "Main",
   },
   calendar: {
     title: "Calendar",
@@ -254,6 +259,17 @@ export const en = {
     dropHint: "Drag a quest to another day — or tap it, then tap a day, to reschedule.",
     pickHint: "Quest selected — tap a day to move it here (Esc to cancel).",
     addHere: "Add",
+    tapPickHint: "Tap “Move” under a quest, then tap a day above to move it here.",
+    dayEmpty: "No quests planned for this day yet.",
+    dayEmptyPicked: "Nothing here yet — tap to move the picked quest to this day.",
+    prevDay: "Previous day",
+    nextDay: "Next day",
+    switchToToday: "Today",
+    pickToMove: "Move",
+    pickCancel: "Cancel move",
+    quests_zero: "No quests",
+    quests_one: "{n} quest",
+    quests_other: "{n} quests",
   },
   settings: {
     title: "Settings",
@@ -339,6 +355,13 @@ export const en = {
     imported: "Data imported.",
     exported: "Backup saved to your Downloads folder.",
     importBadFile: "That doesn't look like a QuestForge backup.",
+    installTitle: "Install as an app",
+    installBlurb:
+      "Install QuestForge as a desktop app — it opens in its own window, starts from the Start menu / Dock, and keeps working offline.",
+    installBtn: "Install QuestForge",
+    installInstalled: "QuestForge is already installed on this device.",
+    installUnavailable:
+      "Your browser hasn't offered install yet. Try Chrome or Edge on desktop, or use the browser's ⋮ menu → Install / Add to home screen.",
     dangerZone: "Danger Zone",
     resetBlurb:
       "Reset all progress — deletes your character, stats, quests and XP history. AI settings are kept. This cannot be undone.",

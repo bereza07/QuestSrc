@@ -11,6 +11,7 @@ import type { DailyGoal } from "@/domain/streak";
 import { secretStore } from "@/services/ai/secretStore";
 import { soundService, SOUND_EVENTS, type SoundEvent } from "@/services/sound/soundService";
 import { exportData, importData, isBackupFile } from "@/services/system/dataTransfer";
+import { pwaInstall } from "@/services/system/pwaInstall";
 import { useToastStore } from "@/stores/toastStore";
 import { useSyncStore, checkServer } from "@/stores/syncStore";
 
@@ -109,6 +110,9 @@ export function Settings() {
           ))}
         </div>
       </section>
+
+      {/* Install as a PWA */}
+      <InstallSection />
 
       {/* Daily goal & availability */}
       <GoalSettings />
@@ -649,6 +653,46 @@ function DataSettings() {
           className="hidden"
           onChange={onFile}
         />
+      </div>
+    </section>
+  );
+}
+
+function InstallSection() {
+  const t = useT();
+  const [canInstall, setCanInstall] = useState(pwaInstall.canInstall());
+  const [installed, setInstalled] = useState(pwaInstall.isInstalled());
+
+  useEffect(() => {
+    return pwaInstall.subscribe(() => {
+      setCanInstall(pwaInstall.canInstall());
+      setInstalled(pwaInstall.isInstalled());
+    });
+  }, []);
+
+  async function onInstall() {
+    await pwaInstall.prompt();
+    setCanInstall(pwaInstall.canInstall());
+    setInstalled(pwaInstall.isInstalled());
+  }
+
+  return (
+    <section className="qf-card mt-6 p-5">
+      <div className="qf-label">{t("settings.installTitle")}</div>
+      <p className="mt-1 text-xs text-fg-3">{t("settings.installBlurb")}</p>
+      <div className="mt-3">
+        {installed ? (
+          <p className="text-sm text-fg-2">{t("settings.installInstalled")}</p>
+        ) : canInstall ? (
+          <button
+            onClick={() => void onInstall()}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+          >
+            {t("settings.installBtn")}
+          </button>
+        ) : (
+          <p className="text-xs text-fg-3">{t("settings.installUnavailable")}</p>
+        )}
       </div>
     </section>
   );

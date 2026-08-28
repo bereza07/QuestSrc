@@ -13,10 +13,12 @@ export async function aiFetch(url: string, init: RequestInit): Promise<Response>
   return window.fetch(url, init);
 }
 
-/** Resolve the request URL, routing DeepSeek through the dev proxy in the browser. */
+/** Resolve the request URL, routing DeepSeek through the same-origin proxy in
+ * the browser (Vite dev-proxy or the sync server's production proxy). Tauri
+ * calls the API directly through the native HTTP plugin. */
 export function resolveUrl(baseUrl: string, path: string): string {
   const clean = baseUrl.replace(/\/$/, "");
-  if (!isTauri && import.meta.env.DEV && clean === "https://api.deepseek.com") {
+  if (!isTauri && clean === "https://api.deepseek.com") {
     return "/deepseek-proxy" + path;
   }
   return clean + path;

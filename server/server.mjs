@@ -18,14 +18,15 @@
 //   PUT  /data {dataset} (Bearer)     -> { updatedAt }
 //   (any other GET)                   -> static file from ./dist (the built app)
 
-import { createServer as createHttpServer } from "node:http";
-import { createServer as createHttpsServer } from "node:https";
+import { createServer as createHttpServer, request as httpRequest } from "node:http";
+import { createServer as createHttpsServer, request as httpsRequest } from "node:https";
 import { DatabaseSync } from "node:sqlite";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, extname, normalize, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { URL as NodeUrl } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -131,6 +132,10 @@ const MIME = {
   ".ico": "image/x-icon",
   ".webmanifest": "application/manifest+json",
   ".woff2": "font/woff2",
+  ".woff": "font/woff",
+  ".wasm": "application/wasm",
+  ".map": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
 };
 
 async function serveStatic(req, res) {
@@ -152,6 +157,58 @@ async function serveStatic(req, res) {
   }
 }
 
+// --- DeepSeek proxy ---------------------------------------------------------
+// Forwards /deepseek-proxy/<path> to https://api.deepseek.com/<path>, streaming
+// the body both ways. The Authorization header travels through untouched, so
+// the API key remains client-side (encrypted at rest via secretStore).
+const DEEPSEEK_ORIGIN = process.env.QF_DEEPSEEK_ORIGIN || "https://api.deepseek.com";
+
+function proxyDeepSeek(req, res, tailPath) {
+  const target = new NodeUrl((tailPath.startsWith("/") ? "" : "/") + tailPath, DEEPSEEK_ORIGIN);
+  const isHttps = target.protocol === "https:";
+  const requester = isHttps ? httpsRequest : httpRequest;
+
+  // Whitelist the headers we forward. Drop hop-by-hop headers and any host/
+  // origin/referer that would confuse the upstream.
+  const forwardHeaders = {};
+  for (const [name, value] of Object.entries(req.headers)) {
+    const n = name.toLowerCase();
+    if (["host", "origin", "referer", "connection", "content-length", "accept-encoding"].includes(n)) continue;
+    forwardHeaders[name] = value;
+  }
+  forwardHeaders["host"] = target.host;
+
+  const upstream = requester(
+    {
+      protocol: target.protocol,
+      hostname: target.hostname,
+      port: target.port || (isHttps ? 443 : 80),
+      method: req.method,
+      path: target.pathname + target.search,
+      headers: forwardHeaders,
+    },
+    (upRes) => {
+      const outHeaders = {
+        ...upRes.headers,
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      };
+      // Drop encoding/length so Node re-frames the stream correctly.
+      delete outHeaders["content-length"];
+      res.writeHead(upRes.statusCode || 502, outHeaders);
+      upRes.pipe(res);
+    },
+  );
+
+  upstream.on("error", (err) => {
+    if (!res.headersSent) send(res, 502, { error: "Upstream error: " + (err?.message || "unknown") });
+    else res.end();
+  });
+
+  req.pipe(upstream);
+}
+
 // --- Routes -----------------------------------------------------------------
 async function handle(req, res) {
   const method = req.method || "GET";
@@ -159,6 +216,14 @@ async function handle(req, res) {
 
   if (method === "OPTIONS") return send(res, 204, null);
   if (path === "/health") return send(res, 200, { ok: true });
+
+  // DeepSeek passthrough for the installed PWA. Mirrors the Vite dev proxy
+  // (see vite.config.ts) so browser-based clients can call the API without
+  // hitting CORS. The Authorization header from the client is forwarded as-is
+  // — the server never sees or stores the API key.
+  if (path.startsWith("/deepseek-proxy")) {
+    return proxyDeepSeek(req, res, path.slice("/deepseek-proxy".length) || "/");
+  }
 
   if (path === "/auth/register" && method === "POST") {
     const body = await readBody(req);

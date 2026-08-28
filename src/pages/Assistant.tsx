@@ -5,7 +5,7 @@ import { useToastStore } from "@/stores/toastStore";
 import { useChatDraftStore } from "@/stores/chatDraftStore";
 import { RulesModal } from "@/features/ai/RulesModal";
 import { useT, useI18nStore } from "@/i18n";
-import { IconChat, IconCheck, IconBook, IconRotateCCW } from "@/components/icons";
+import { IconChat, IconCheck, IconBook, IconRotateCCW, IconSend, IconTrash } from "@/components/icons";
 import type { AIAction, AIWarning } from "@/types/ai";
 import type { ChatMessage } from "@/services/ai/provider";
 import { AIError } from "@/services/ai/provider";
@@ -254,22 +254,38 @@ export function Assistant() {
   }
 
   return (
-    // Fixed chat panel: only the messages list scrolls; the composer is pinned
-    // to the bottom. Height derives from the viewport minus the app top padding.
-    <div className="flex h-[calc(100vh-6rem)] flex-col">
-      <div className="flex items-center justify-between">
-        <div>
+    // Chat panel — flex column filling the viewport minus the shell (mobile top
+    // bar + page padding on phones, page padding only on md+). `dvh` follows
+    // the mobile browser chrome so the composer never gets covered.
+    <div className="flex flex-col h-[calc(100dvh-5.5rem)] md:h-[calc(100vh-6rem)]">
+      {/* Header. Wraps on small screens: the action cluster falls to its own
+          row so long buttons no longer collide with the title. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold text-fg">{t("ai.title")}</h1>
-          <p className="mt-0.5 text-xs text-fg-3">{t("ai.subtitle")}</p>
+          <p className="mt-0.5 hidden text-xs text-fg-3 md:block">{t("ai.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <ProjectScopeSelector />
-          <button className="qf-btn-ghost text-xs" onClick={() => setShowRules(true)}>
-            <IconBook size={14} /> {t("ai.rules")}
+          {/* Icon-only on the tightest widths; label + icon from sm+. */}
+          <button
+            className="qf-btn-ghost text-xs"
+            onClick={() => setShowRules(true)}
+            title={t("ai.rules")}
+            aria-label={t("ai.rules")}
+          >
+            <IconBook size={14} />
+            <span className="hidden sm:inline">{t("ai.rules")}</span>
           </button>
           {messages.length > 0 && (
-            <button className="qf-btn-ghost text-xs" onClick={clearChat}>
-              {t("ai.clear")}
+            <button
+              className="qf-btn-ghost text-xs"
+              onClick={clearChat}
+              title={t("ai.clear")}
+              aria-label={t("ai.clear")}
+            >
+              <IconTrash size={14} />
+              <span className="hidden sm:inline">{t("ai.clear")}</span>
             </button>
           )}
         </div>
@@ -280,17 +296,24 @@ export function Assistant() {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
+        className="mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto -mx-1 px-1 md:mt-4"
       >
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="text-base font-semibold text-fg-2">{t("ai.emptyTitle")}</div>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <div className="flex h-full flex-col items-center justify-center px-4 text-center">
+            <div
+              className="flex h-14 w-14 items-center justify-center rounded-full text-accent"
+              style={{ background: "var(--accent-bg)" }}
+            >
+              <IconChat size={22} />
+            </div>
+            <div className="mt-4 text-base font-semibold text-fg">{t("ai.emptyTitle")}</div>
+            <p className="mt-1 max-w-xs text-xs text-fg-3">{t("ai.subtitle")}</p>
+            <div className="mt-5 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
               {["ai.suggest1", "ai.suggest2", "ai.suggest3"].map((k) => (
                 <button
                   key={k}
                   onClick={() => send(t(k))}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs text-fg-2 hover:border-accent hover:text-accent"
+                  className="rounded-full border border-border px-3 py-2 text-xs text-fg-2 hover:border-accent hover:text-accent sm:py-1.5"
                 >
                   {t(k)}
                 </button>
@@ -310,13 +333,13 @@ export function Assistant() {
           return (
           <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
             <div
-              className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
+              className={`max-w-[92%] break-words rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed sm:max-w-[85%] sm:px-4 ${
                 m.role === "user"
-                  ? "bg-accent-bg text-fg"
-                  : "border border-border bg-surface text-fg-2"
+                  ? "rounded-br-md bg-accent-bg text-fg"
+                  : "rounded-bl-md border border-border bg-surface text-fg-2"
               }`}
             >
-              {m.content && <div className="whitespace-pre-wrap">{m.content}</div>}
+              {m.content && <div className="whitespace-pre-wrap break-words">{m.content}</div>}
 
               {/* Inline quick-reply chips (Claude-style). When the assistant
                   message is a question with numbered options ("1) 30 min ·
@@ -363,13 +386,6 @@ export function Assistant() {
                   <IconCheck size={13} /> {t("ai.appliedBadge")}
                 </div>
               )}
-              {/* Assistant replied but proposed nothing to apply — clarify it's
-                  a chat/question reply, not a broken action panel. */}
-              {m.role === "assistant" && !showActions && !m.applied && !m.error && m.content && (
-                <div className="mt-1 text-[10px] italic text-fg-3">
-                  {t("ai.noActionsHint")}
-                </div>
-              )}
               {m.error && (
                 <button
                   onClick={retry}
@@ -388,7 +404,7 @@ export function Assistant() {
       </div>
 
       <form
-        className="mt-3 flex items-end gap-2 border-t border-border pt-3"
+        className="mt-3 flex items-end gap-2 border-t border-border pt-3 pb-[env(safe-area-inset-bottom,0)]"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
@@ -445,8 +461,14 @@ export function Assistant() {
           className="qf-input max-h-60 min-h-[2.75rem] flex-1 resize-none overflow-y-auto py-2.5 leading-relaxed"
           disabled={busy}
         />
-        <button className="qf-btn-primary shrink-0" disabled={busy || !input.trim()}>
-          {t("ai.send")}
+        <button
+          className="qf-btn-primary shrink-0 h-11 w-11 justify-center p-0 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+          disabled={busy || !input.trim()}
+          aria-label={t("ai.send")}
+          title={t("ai.send")}
+        >
+          <IconSend size={16} />
+          <span className="hidden sm:inline">{t("ai.send")}</span>
         </button>
       </form>
     </div>
@@ -564,7 +586,7 @@ function ProjectScopeSelector() {
     <select
       value={scope ?? ""}
       onChange={(e) => setScope(e.target.value || null)}
-      className="qf-input h-8 w-auto min-w-[8rem] max-w-full py-0.5 text-xs"
+      className="qf-input h-8 w-full max-w-[14rem] py-0.5 text-xs sm:w-auto sm:min-w-[8rem]"
       title={t("ai.scopeHint")}
       aria-label={t("ai.scope")}
     >

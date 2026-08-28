@@ -70,18 +70,18 @@ export function Dashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-2 md:mb-6">
         <div>
           <h1 className="text-xl font-semibold text-fg">{t("nav.dashboard")}</h1>
           <p className="mt-0.5 text-sm text-fg-3">{dateStr}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1.5 text-sm text-fg-2">
             <IconFlame size={14} className="text-accent" />
             <span className="font-mono font-medium text-fg">{streak?.current ?? 0}</span>
             <span>{t("dashboard.dayStreakUnit")}</span>
           </div>
-          <div className="h-4 w-px bg-border" />
+          <div className="hidden md:block h-4 w-px bg-border" />
           <div className="flex items-center gap-1.5 text-sm text-fg-2">
             <IconZap size={14} className="text-accent" />
             <span className="font-mono font-medium text-fg">
@@ -92,9 +92,13 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 1fr 320px" }}>
-        {/* Main goal — spans two columns of the left/middle. */}
-        <div className="qf-card col-span-2 p-5">
+      {/* Responsive grid:
+          - mobile: single column, cards stack.
+          - tablet (md): 2 columns.
+          - desktop (xl): 3 columns (1fr 1fr 320px) — original desktop layout. */}
+      <div className="grid gap-4 md:gap-5 grid-cols-1 md:grid-cols-2 xl:[grid-template-columns:1fr_1fr_320px]">
+        {/* Main goal — full width on mobile/tablet, spans two of three on xl. */}
+        <div className="qf-card p-5 md:col-span-2">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="mb-1 flex items-center gap-2">
@@ -151,8 +155,9 @@ export function Dashboard() {
           )}
         </div>
 
-        {/* Character card — spans two rows on the right. */}
-        <div className="qf-card row-span-2 p-5">
+        {/* Character card — spans full width on md (below the main goal), then
+            two rows on xl to fill the right column of the desktop grid. */}
+        <div className="qf-card p-5 md:col-span-2 xl:col-span-1 xl:row-span-2">
           {/* Clickable — jumps to the Character page. */}
           <Link
             to="/character"

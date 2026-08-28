@@ -36,6 +36,8 @@ export const ru: Messages = {
     darkMode: "Тёмная тема",
     collapse: "Свернуть",
     expand: "Развернуть",
+    openMenu: "Открыть меню",
+    closeMenu: "Закрыть меню",
   },
   app: {
     loading: "Открываем твой журнал квестов…",
@@ -244,6 +246,9 @@ export const ru: Messages = {
     searchPlaceholder: "Поиск целей…",
     allProjects: "Все проекты",
     noProject: "Без проекта",
+    showMore: "Показать полностью",
+    showLess: "Свернуть",
+    setMainShort: "Главная",
   },
   calendar: {
     title: "Календарь",
@@ -257,6 +262,17 @@ export const ru: Messages = {
     dropHint: "Перетащи квест на другой день — или нажми на него, затем на день, чтобы перенести.",
     pickHint: "Квест выбран — нажми на день, куда перенести (Esc — отмена).",
     addHere: "Добавить",
+    tapPickHint: "Нажми «Перенести» под квестом, затем на день выше — чтобы перенести.",
+    dayEmpty: "На этот день ещё нет квестов.",
+    dayEmptyPicked: "Здесь пусто — нажми, чтобы перенести выбранный квест на этот день.",
+    prevDay: "Предыдущий день",
+    nextDay: "Следующий день",
+    switchToToday: "Сегодня",
+    pickToMove: "Перенести",
+    pickCancel: "Отменить перенос",
+    quests_zero: "Нет квестов",
+    quests_one: "{n} квест",
+    quests_other: "{n} квестов",
   },
   settings: {
     title: "Настройки",
@@ -342,6 +358,13 @@ export const ru: Messages = {
     imported: "Данные импортированы.",
     exported: "Резервная копия сохранена в папку «Загрузки».",
     importBadFile: "Это не похоже на резервную копию QuestForge.",
+    installTitle: "Установить как приложение",
+    installBlurb:
+      "Установи QuestForge как приложение — открывается в собственном окне, запускается из меню «Пуск» / Dock и работает офлайн.",
+    installBtn: "Установить QuestForge",
+    installInstalled: "QuestForge уже установлен на этом устройстве.",
+    installUnavailable:
+      "Браузер пока не предложил установку. Попробуй Chrome или Edge на ПК, либо открой меню ⋮ → Установить приложение.",
     dangerZone: "Опасная зона",
     resetBlurb:
       "Сбросить весь прогресс — удаляет персонажа, характеристики, квесты и историю XP. Настройки AI сохраняются. Это необратимо.",

@@ -2,18 +2,16 @@ import { useEffect, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useT } from "@/i18n";
 import { ProgressBar } from "@/components/ProgressBar";
-import { IconPlus, IconGoals, IconTrash, IconCheck, IconEdit, IconX } from "@/components/icons";
+import { IconPlus, IconGoals, IconTrash, IconCheck, IconEdit, IconX, IconStar } from "@/components/icons";
 import { relativeDayLabel } from "@/utils/date";
 import { useI18nStore } from "@/i18n";
 import type { Goal } from "@/data/repositories/goalRepo";
 
 export function Goals() {
   const t = useT();
-  const lang = useI18nStore((s) => s.lang);
   const repos = useAppStore((s) => s.repos);
   const goals = useAppStore((s) => s.goals);
   const projects = useAppStore((s) => s.projects);
-  const refresh = useAppStore((s) => s.refresh);
 
   const [progress, setProgress] = useState<Map<string, { done: number; total: number }>>(
     new Map(),
@@ -59,9 +57,12 @@ export function Goals() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      {/* Header — wraps on mobile so the "New goal" button doesn't crash into
+          the title, and the "Show completed" toggle falls onto its own row when
+          space runs out. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-fg">{t("goals.title")}</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {completedCount > 0 && (
             <button
               type="button"
@@ -113,98 +114,163 @@ export function Goals() {
             {goals.length === 0 ? t("goals.empty") : t("goals.allDone")}
           </div>
         )}
-        {visibleGoals.map((g) => {
-          const p = progress.get(g.id) ?? { done: 0, total: 0 };
-          const frac = p.total > 0 ? p.done / p.total : 0;
-          const project = projects.find((pr) => pr.id === g.projectId);
-          return (
-            <section key={g.id} className="qf-card p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    {g.isMainQuest && (
-                      <span className="rounded-full bg-accent-bg px-2 py-0.5 text-[11px] uppercase tracking-wider text-accent">
-                        ★ {t("goals.mainQuest")}
-                      </span>
-                    )}
-                    <IconGoals size={16} className="text-fg-3" />
-                    <h2 className={`truncate text-base font-medium ${g.completedAt ? "text-fg-3 line-through" : "text-fg"}`}>
-                      {g.title}
-                    </h2>
-                    {g.completedAt && (
-                      <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] uppercase tracking-wider text-success">
-                        ✓ {t("goals.completed")}
-                      </span>
-                    )}
-                  </div>
-                  {g.description && (
-                    <p className="mt-1 text-sm text-fg-2">{g.description}</p>
-                  )}
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-fg-3">
-                    {project && <span>· {project.name}</span>}
-                    {g.deadline && (
-                      <span>
-                        {t("goals.deadline")}: {relativeDayLabel(g.deadline, t, lang)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    className="qf-btn-ghost text-xs"
-                    onClick={() => setEditing((cur) => (cur === g.id ? null : g.id))}
-                  >
-                    {editing === g.id ? t("common.cancel") : t("common.edit")}
-                  </button>
-                  {!g.isMainQuest && !g.completedAt && (
-                    <button
-                      className="qf-btn-ghost text-xs"
-                      onClick={() => repos?.goals.setMainQuest(g.id).then(refresh)}
-                    >
-                      {t("goals.setAsMainQuest")}
-                    </button>
-                  )}
-                  <button
-                    className={`qf-btn-ghost text-xs ${g.completedAt ? "" : "text-success"}`}
-                    onClick={() =>
-                      repos?.goals.setCompleted(g.id, !g.completedAt).then(refresh)
-                    }
-                  >
-                    {g.completedAt ? t("goals.reopen") : (
-                      <><IconCheck size={12} /> {t("goals.markComplete")}</>
-                    )}
-                  </button>
-                  <button
-                    className="rounded-md p-2 text-fg-3 hover:text-danger"
-                    onClick={() => repos?.goals.delete(g.id).then(refresh)}
-                    aria-label={t("common.delete")}
-                  >
-                    <IconTrash size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <div className="mb-1 flex justify-between text-xs text-fg-3">
-                  <span>{t("goals.progress")}</span>
-                  <span className="font-mono">
-                    {t("goals.completedOf", { done: p.done, total: p.total })}
-                  </span>
-                </div>
-                <ProgressBar value={frac} height={6} />
-              </div>
-
-              {editing === g.id && (
-                <EditGoalForm
-                  goal={g}
-                  onDone={() => setEditing(null)}
-                />
-              )}
-            </section>
-          );
-        })}
+        {visibleGoals.map((g) => (
+          <GoalCard
+            key={g.id}
+            goal={g}
+            progress={progress.get(g.id) ?? { done: 0, total: 0 }}
+            projectName={projects.find((pr) => pr.id === g.projectId)?.name ?? null}
+            editing={editing === g.id}
+            onToggleEdit={() => setEditing((cur) => (cur === g.id ? null : g.id))}
+            onDoneEdit={() => setEditing(null)}
+          />
+        ))}
       </div>
     </div>
+  );
+}
+
+interface GoalCardProps {
+  goal: Goal;
+  progress: { done: number; total: number };
+  projectName: string | null;
+  editing: boolean;
+  onToggleEdit: () => void;
+  onDoneEdit: () => void;
+}
+
+// A single goal card. Split out so we can hold per-goal UI state
+// (description clamp toggle) locally without lifting it to the page.
+function GoalCard({ goal: g, progress: p, projectName, editing, onToggleEdit, onDoneEdit }: GoalCardProps) {
+  const t = useT();
+  const lang = useI18nStore((s) => s.lang);
+  const repos = useAppStore((s) => s.repos);
+  const refresh = useAppStore((s) => s.refresh);
+  const [expanded, setExpanded] = useState(false);
+
+  const frac = p.total > 0 ? p.done / p.total : 0;
+  // "Show more" only shows up when the description is long enough that the
+  // clamp would actually hide content — cheap heuristic on character count.
+  const descIsLong = (g.description?.length ?? 0) > 220;
+
+  return (
+    <section className="qf-card p-4 sm:p-5">
+      {/* Title block: badges + name + description. `min-w-0` lets the child
+          `truncate` work; long descriptions no longer stretch the row width. */}
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {g.isMainQuest && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent-bg px-2 py-0.5 text-[11px] uppercase tracking-wider text-accent">
+              <IconStar size={10} /> {t("goals.mainQuest")}
+            </span>
+          )}
+          <IconGoals size={16} className="shrink-0 text-fg-3" />
+          <h2
+            className={`min-w-0 flex-1 break-words text-base font-medium ${
+              g.completedAt ? "text-fg-3 line-through" : "text-fg"
+            }`}
+          >
+            {g.title}
+          </h2>
+          {g.completedAt && (
+            <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] uppercase tracking-wider text-success">
+              ✓ {t("goals.completed")}
+            </span>
+          )}
+        </div>
+        {g.description && (
+          <div className="mt-1.5">
+            <p
+              className={`text-sm text-fg-2 break-words whitespace-pre-wrap ${
+                !expanded && descIsLong ? "line-clamp-4" : ""
+              }`}
+            >
+              {g.description}
+            </p>
+            {descIsLong && (
+              <button
+                type="button"
+                className="mt-0.5 text-xs text-accent hover:underline"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? t("goals.showLess") : t("goals.showMore")}
+              </button>
+            )}
+          </div>
+        )}
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-fg-3">
+          {projectName && <span>· {projectName}</span>}
+          {g.deadline && (
+            <span>
+              {t("goals.deadline")}: {relativeDayLabel(g.deadline, t, lang)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Actions row. Wraps below the title on any screen so text-heavy
+          buttons no longer collide with the title on mobile. The action row
+          right-aligns on wider screens and stays comfortably tappable on phones. */}
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-1.5 border-t border-border pt-2.5">
+        {!g.isMainQuest && !g.completedAt && (
+          <button
+            className="qf-btn-ghost text-xs"
+            onClick={() => repos?.goals.setMainQuest(g.id).then(refresh)}
+            title={t("goals.setAsMainQuest")}
+          >
+            <IconStar size={12} />
+            <span className="hidden sm:inline">{t("goals.setAsMainQuest")}</span>
+            <span className="sm:hidden">{t("goals.setMainShort")}</span>
+          </button>
+        )}
+        <button
+          className={`qf-btn-ghost text-xs ${g.completedAt ? "" : "text-success"}`}
+          onClick={() =>
+            repos?.goals.setCompleted(g.id, !g.completedAt).then(refresh)
+          }
+          title={g.completedAt ? t("goals.reopen") : t("goals.markComplete")}
+        >
+          {g.completedAt ? (
+            t("goals.reopen")
+          ) : (
+            <>
+              <IconCheck size={12} />
+              <span className="hidden sm:inline">{t("goals.markComplete")}</span>
+            </>
+          )}
+        </button>
+        <button
+          className="qf-btn-ghost text-xs"
+          onClick={onToggleEdit}
+          title={editing ? t("common.cancel") : t("common.edit")}
+        >
+          <IconEdit size={12} />
+          <span className="hidden sm:inline">
+            {editing ? t("common.cancel") : t("common.edit")}
+          </span>
+        </button>
+        <button
+          className="rounded-md p-2 text-fg-3 hover:text-danger"
+          onClick={() => repos?.goals.delete(g.id).then(refresh)}
+          aria-label={t("common.delete")}
+          title={t("common.delete")}
+        >
+          <IconTrash size={14} />
+        </button>
+      </div>
+
+      <div className="mt-3">
+        <div className="mb-1 flex justify-between text-xs text-fg-3">
+          <span>{t("goals.progress")}</span>
+          <span className="font-mono">
+            {t("goals.completedOf", { done: p.done, total: p.total })}
+          </span>
+        </div>
+        <ProgressBar value={frac} height={6} />
+      </div>
+
+      {editing && <EditGoalForm goal={g} onDone={onDoneEdit} />}
+    </section>
   );
 }
 
