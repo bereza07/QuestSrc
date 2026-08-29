@@ -13,7 +13,7 @@ import { soundService, SOUND_EVENTS, type SoundEvent } from "@/services/sound/so
 import { exportData, importData, isBackupFile } from "@/services/system/dataTransfer";
 import { pwaInstall } from "@/services/system/pwaInstall";
 import { useToastStore } from "@/stores/toastStore";
-import { useSyncStore, checkServer } from "@/stores/syncStore";
+import { useSyncStore, checkServer, getServerPolicy, type ServerPolicy } from "@/stores/syncStore";
 
 const AI_PROVIDERS = ["deepseek", "openai", "anthropic", "custom"];
 const DEFAULTS = {
@@ -347,7 +347,22 @@ function SyncSettings() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [invite, setInvite] = useState("");
   const [checkResult, setCheckResult] = useState<null | boolean>(null);
+  // Server-advertised policy from GET /health. Determines whether we show the
+  // invite field and whether the "Register" button is enabled.
+  const [policy, setPolicy] = useState<ServerPolicy | null>(null);
+
+  // Refresh policy when the URL changes or the user is signed out. Signed-in
+  // users don't need it (they already have an account).
+  useEffect(() => {
+    if (sync.token) return;
+    let cancelled = false;
+    void getServerPolicy(sync.serverUrl).then((p) => {
+      if (!cancelled) setPolicy(p);
+    });
+    return () => { cancelled = true; };
+  }, [sync.serverUrl, sync.token]);
 
   const when = sync.lastSyncedAt
     ? new Date(sync.lastSyncedAt).toLocaleString()
@@ -355,8 +370,10 @@ function SyncSettings() {
 
   async function auth(kind: "login" | "register") {
     try {
-      if (kind === "register") await sync.register(email.trim(), password);
-      else await sync.login(email.trim(), password);
+      if (kind === "register") {
+        await sync.register(email.trim(), password, invite.trim() || undefined);
+        setInvite("");
+      } else await sync.login(email.trim(), password);
       setPassword("");
       // On first sign-in, pull if the server has data, otherwise seed it.
       if (repos) {
@@ -450,6 +467,29 @@ function SyncSettings() {
               autoComplete="off"
             />
           </div>
+
+          {/* Invite code — only shown when the server declares it required.
+              Servers that don't advertise a policy (older builds, or those
+              running with open registration) simply omit this field. */}
+          {policy?.inviteRequired && policy.registrationEnabled && (
+            <div className="mt-2">
+              <input
+                value={invite}
+                onChange={(e) => setInvite(e.target.value)}
+                placeholder={t("settings.syncInvitePlaceholder")}
+                className="qf-input"
+                autoComplete="off"
+              />
+              <p className="mt-1 text-[11px] text-fg-3">
+                {t("settings.syncInviteHint")}
+              </p>
+            </div>
+          )}
+
+          {policy && !policy.registrationEnabled && (
+            <p className="mt-2 text-xs text-warn">{t("settings.syncRegistrationDisabled")}</p>
+          )}
+
           <div className="mt-3 flex gap-2">
             <button
               className="qf-btn-primary"
@@ -461,7 +501,20 @@ function SyncSettings() {
             <button
               className="qf-btn-ghost"
               onClick={() => auth("register")}
-              disabled={sync.status === "syncing" || !email || !password}
+              disabled={
+                sync.status === "syncing" ||
+                !email ||
+                !password ||
+                (policy?.registrationEnabled === false) ||
+                (policy?.inviteRequired === true && !invite.trim())
+              }
+              title={
+                policy?.registrationEnabled === false
+                  ? t("settings.syncRegistrationDisabled")
+                  : policy?.inviteRequired && !invite.trim()
+                    ? t("settings.syncInviteHint")
+                    : undefined
+              }
             >
               {t("settings.syncRegister")}
             </button>

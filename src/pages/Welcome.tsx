@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
-import { useSyncStore, checkServer } from "@/stores/syncStore";
+import { useSyncStore, checkServer, getServerPolicy, type ServerPolicy } from "@/stores/syncStore";
 import { useT, useI18nStore, LANG_LABELS, type Lang } from "@/i18n";
 import { Onboarding } from "./Onboarding";
 
@@ -19,16 +19,28 @@ export function Welcome() {
   const [mode, setMode] = useState<"choose" | "new" | "signin">("choose");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [invite, setInvite] = useState("");
   const [check, setCheck] = useState<null | boolean>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [policy, setPolicy] = useState<ServerPolicy | null>(null);
+
+  // Pull server policy so we know whether to show the invite field.
+  useEffect(() => {
+    if (mode !== "signin") return;
+    let cancelled = false;
+    void getServerPolicy(sync.serverUrl).then((p) => {
+      if (!cancelled) setPolicy(p);
+    });
+    return () => { cancelled = true; };
+  }, [mode, sync.serverUrl]);
 
   async function signIn(kind: "login" | "register") {
     if (!repos) return;
     setBusy(true);
     setError(null);
     try {
-      if (kind === "register") await sync.register(email.trim(), password);
+      if (kind === "register") await sync.register(email.trim(), password, invite.trim() || undefined);
       else await sync.login(email.trim(), password);
       sync.setAutoSync(true);
       // completeOnboardingFromSync pulls + flips app status → "ready" (or stays
@@ -138,6 +150,18 @@ export function Welcome() {
               className="qf-input"
               autoComplete="off"
             />
+            {policy?.inviteRequired && policy.registrationEnabled && (
+              <input
+                value={invite}
+                onChange={(e) => setInvite(e.target.value)}
+                placeholder={t("settings.syncInvitePlaceholder")}
+                className="qf-input"
+                autoComplete="off"
+              />
+            )}
+            {policy && !policy.registrationEnabled && (
+              <p className="text-xs text-warn">{t("settings.syncRegistrationDisabled")}</p>
+            )}
             {error && <div className="text-xs text-danger">{error}</div>}
             <div className="flex flex-col gap-2">
               <button
@@ -149,7 +173,11 @@ export function Welcome() {
               </button>
               <button
                 className="qf-btn-ghost w-full justify-center"
-                disabled={busy || !email || !password}
+                disabled={
+                  busy || !email || !password ||
+                  (policy?.registrationEnabled === false) ||
+                  (policy?.inviteRequired === true && !invite.trim())
+                }
                 onClick={() => signIn("register")}
               >
                 {t("settings.syncRegister")}

@@ -20,7 +20,7 @@ interface SyncState {
 
   setServerUrl: (url: string) => void;
   setAutoSync: (on: boolean) => void;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, invite?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   push: (repos: Repositories) => Promise<void>;
@@ -81,6 +81,12 @@ async function api(
   }
 }
 
+export interface ServerPolicy {
+  ok: boolean;
+  registrationEnabled: boolean;
+  inviteRequired: boolean;
+}
+
 /** Ping the server's /health so the UI can confirm connectivity. */
 export async function checkServer(url: string): Promise<boolean> {
   try {
@@ -88,6 +94,24 @@ export async function checkServer(url: string): Promise<boolean> {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+/** Same as checkServer, but returns the server's registration policy so the
+ * UI can show/hide the invite field and disable the register button. Falls
+ * back to permissive defaults if the server is old and doesn't advertise them. */
+export async function getServerPolicy(url: string): Promise<ServerPolicy | null> {
+  try {
+    const res = await fetch(baseUrl(url) + "/health");
+    if (!res.ok) return null;
+    const j = await res.json().catch(() => ({}));
+    return {
+      ok: true,
+      registrationEnabled: j.registrationEnabled !== false,
+      inviteRequired: j.inviteRequired === true,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -119,10 +143,12 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     set({ autoSync: on });
   },
 
-  register: async (email, password) => {
+  register: async (email, password, invite) => {
     set({ status: "syncing", error: null });
     try {
-      const res = await api(get().serverUrl, "/auth/register", "POST", null, { email, password });
+      const body: Record<string, string> = { email, password };
+      if (invite) body.invite = invite;
+      const res = await api(get().serverUrl, "/auth/register", "POST", null, body);
       if (!res.ok) throw new Error(await errText(res));
       const data = await res.json();
       setLs(LS.token, data.token);

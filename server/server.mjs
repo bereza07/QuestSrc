@@ -35,6 +35,21 @@ const DATA_DIR = process.env.QF_DATA_DIR || join(__dirname, "data");
 const MAX_BODY = Number(process.env.QF_MAX_BODY_MB || 25) * 1024 * 1024;
 const DIST_DIR = join(ROOT, "dist");
 
+// --- Registration policy ----------------------------------------------------
+// QF_REGISTRATION=off completely disables new-account creation (existing users
+// can still log in). Useful for private instances where all accounts are
+// pre-provisioned. QF_INVITE_CODES=code1,code2,… requires callers to supply one
+// of these in the register body — keeps the endpoint reachable for legit users
+// while blocking bots that scan the internet for open sync servers.
+const REGISTRATION_ENABLED = (process.env.QF_REGISTRATION ?? "on").toLowerCase() !== "off";
+const INVITE_CODES = new Set(
+  (process.env.QF_INVITE_CODES || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+const INVITES_REQUIRED = INVITE_CODES.size > 0;
+
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
 // --- Database ---------------------------------------------------------------
@@ -215,7 +230,13 @@ async function handle(req, res) {
   const path = (req.url || "/").split("?")[0];
 
   if (method === "OPTIONS") return send(res, 204, null);
-  if (path === "/health") return send(res, 200, { ok: true });
+  if (path === "/health") {
+    return send(res, 200, {
+      ok: true,
+      registrationEnabled: REGISTRATION_ENABLED,
+      inviteRequired: INVITES_REQUIRED,
+    });
+  }
 
   // DeepSeek passthrough for the installed PWA. Mirrors the Vite dev proxy
   // (see vite.config.ts) so browser-based clients can call the API without
@@ -226,9 +247,21 @@ async function handle(req, res) {
   }
 
   if (path === "/auth/register" && method === "POST") {
+    if (!REGISTRATION_ENABLED) {
+      return send(res, 403, { error: "Registration is disabled on this server", code: "registration_disabled" });
+    }
     const body = await readBody(req);
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
+    const invite = String(body.invite || "").trim();
+    if (INVITES_REQUIRED && !INVITE_CODES.has(invite)) {
+      // "invite_required" also covers the "no invite supplied" case — the
+      // client shows the invite field whenever it sees either code.
+      return send(res, 403, {
+        error: invite ? "Invalid invite code" : "This server requires an invite code",
+        code: invite ? "invite_invalid" : "invite_required",
+      });
+    }
     if (!email || !email.includes("@")) return send(res, 400, { error: "Invalid email" });
     if (password.length < 6) return send(res, 400, { error: "Password too short (min 6)" });
     if (db.prepare("SELECT 1 FROM users WHERE email = ?").get(email)) {
@@ -344,6 +377,13 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Data dir: ${DATA_DIR}`);
   if (scheme === "http") {
     console.log("TLS off — set QF_TLS_KEY and QF_TLS_CERT for HTTPS (needed for iPhone PWA install).");
+  }
+  if (!REGISTRATION_ENABLED) {
+    console.log("Registration: DISABLED (QF_REGISTRATION=off).");
+  } else if (INVITES_REQUIRED) {
+    console.log(`Registration: invite-only (${INVITE_CODES.size} code${INVITE_CODES.size === 1 ? "" : "s"} accepted).`);
+  } else {
+    console.log("Registration: OPEN. Set QF_INVITE_CODES to require invites, or QF_REGISTRATION=off to disable.");
   }
   console.log(existsSync(DIST_DIR) ? "Serving built app from ./dist" : "No ./dist yet — run `npm run build` to serve the app over LAN.");
 });
