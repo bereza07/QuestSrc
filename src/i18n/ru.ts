@@ -273,6 +273,7 @@ export const ru: Messages = {
     quests_zero: "Нет квестов",
     quests_one: "{n} квест",
     quests_other: "{n} квестов",
+    monthTapHint: "Нажми на день, чтобы открыть. В режиме «Неделя» листай дни свайпом.",
   },
   settings: {
     title: "Настройки",

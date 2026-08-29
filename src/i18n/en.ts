@@ -270,6 +270,7 @@ export const en = {
     quests_zero: "No quests",
     quests_one: "{n} quest",
     quests_other: "{n} quests",
+    monthTapHint: "Tap a day to open it. Swipe left/right in week view to move through days.",
   },
   settings: {
     title: "Settings",
