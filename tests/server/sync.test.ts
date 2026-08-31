@@ -67,7 +67,13 @@ describe("sync server", () => {
   it("health", async () => {
     const res = await get("/health");
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    // /health also advertises registration policy so the client can show the
+    // invite-code field only when the server actually requires one.
+    expect(await res.json()).toEqual({
+      ok: true,
+      registrationEnabled: true,
+      inviteRequired: false,
+    });
   });
 
   it("register → login → put/get dataset roundtrip", async () => {

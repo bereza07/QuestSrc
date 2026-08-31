@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAppStore } from "@/stores/appStore";
 import { useTimerStore } from "@/stores/timerStore";
+import { scheduleStartupCheck } from "@/services/system/desktopUpdater";
 import { TimerRecoveryModal } from "@/features/focus-timer/TimerRecoveryModal";
 import { useT } from "@/i18n";
 import { Layout } from "@/components/Layout";
@@ -45,6 +46,9 @@ export default function App() {
 
   useEffect(() => {
     void init();
+    // In the desktop app, quietly check GitHub Releases 5 s after launch and
+    // surface any update via the Settings → Updates card. No-op on web/PWA.
+    scheduleStartupCheck(5000);
   }, [init]);
 
   useEffect(() => {

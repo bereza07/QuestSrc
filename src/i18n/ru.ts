@@ -362,6 +362,17 @@ export const ru: Messages = {
     imported: "Данные импортированы.",
     exported: "Резервная копия сохранена в папку «Загрузки».",
     importBadFile: "Это не похоже на резервную копию QuestForge.",
+    updateTitle: "Обновления приложения",
+    updateBlurb:
+      "QuestForge проверяет новую версию автоматически при запуске. Можно также проверить прямо сейчас.",
+    updateCheck: "Проверить обновления",
+    updateChecking: "Проверяем…",
+    updateUpToDate: "Установлена последняя версия.",
+    updateAvailable: "Доступна новая версия {version}.",
+    updateInstall: "Установить {version} и перезапустить",
+    updateDownloading: "Загружаем… {percent}%",
+    updateInstalling: "Устанавливаем… приложение перезапустится через мгновение.",
+    updateError: "Не удалось обновить",
     installTitle: "Установить как приложение",
     installBlurb:
       "Установи QuestForge как приложение — открывается в собственном окне, запускается из меню «Пуск» / Dock и работает офлайн.",

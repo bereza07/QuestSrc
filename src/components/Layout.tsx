@@ -75,6 +75,35 @@ export function Layout() {
     return () => { document.body.style.overflow = prev; };
   }, [drawerOpen]);
 
+  // iOS Safari's left-edge back-swipe is enforced at the browser level and is
+  // NOT stopped by touch-action / overscroll-behavior — the only fix that
+  // works reliably is calling preventDefault on the native touchstart when the
+  // touch lands in the edge zone. React attaches touch handlers as passive by
+  // default (can't preventDefault), so we register a native non-passive one.
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    function isMobile() {
+      return typeof window !== "undefined" && window.innerWidth < 768;
+    }
+    function onTouchStart(e: TouchEvent) {
+      if (!isMobile()) return;
+      const t = e.touches[0];
+      if (!t) return;
+      const inEdge = !drawerOpen && t.clientX <= 24;
+      const onOpenDrawer = drawerOpen && t.clientX <= drawerWidthRef.current;
+      if (inEdge || onOpenDrawer) {
+        // Cancels iOS Safari's edge-swipe back-navigation AND Chrome/Android's
+        // horizontal overscroll. From here on our pointer handlers own the
+        // gesture completely.
+        e.preventDefault();
+      }
+    }
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => el.removeEventListener("touchstart", onTouchStart);
+  }, [drawerOpen]);
+
   // Edge-swipe / drag gestures for the drawer. Uses pointer events so it also
   // works for mouse drags (dev/testing). Only reacts to touch/pen on mobile
   // widths — desktop has its own sidebar. Rules:
@@ -106,6 +135,9 @@ export function Layout() {
     const closedEdge = !drawerOpen && e.clientX <= 24;
     const openOnDrawer = drawerOpen && e.clientX <= drawerWidthRef.current;
     if (!closedEdge && !openOnDrawer) return;
+    // Note: we DON'T capture the pointer here — that would swallow the click
+    // event on drawer nav links / hamburger buttons. Capture is applied only
+    // after we confirm it's a horizontal drag (see onGlobalPointerMove).
     gestureRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -128,6 +160,14 @@ export function Layout() {
       if (Math.abs(dx) > Math.abs(dy)) {
         g.horizontal = true;
         g.active = true;
+        // Now that we're committed to a horizontal drag, capture the pointer.
+        // This keeps the whole drag stream ours even if the finger crosses
+        // element boundaries and — combined with touch-action:pan-y on the
+        // container and overscroll-behavior:none on the body — prevents the
+        // browser's own edge-swipe back navigation from stealing the gesture.
+        try {
+          (e.currentTarget as Element).setPointerCapture(e.pointerId);
+        } catch { /* older iOS may refuse; harmless */ }
       } else {
         // Vertical scroll — abandon the gesture and let the page scroll.
         gestureRef.current = null;
@@ -206,7 +246,15 @@ export function Layout() {
 
   return (
     <div
-      className="flex h-full min-h-screen bg-bg text-fg"
+      ref={rootRef}
+      // touch-pan-y on mobile: tells the browser "vertical scroll is native,
+      // horizontal is mine" — Chrome/Android/Safari no longer interpret
+      // left-edge swipes as browser back-navigation and hand the whole
+      // gesture over to our onPointer* handlers. Restored to default on md+
+      // so desktop trackpad/mouse behaviour is unaffected. The non-passive
+      // touchstart listener in the effect above is the belt: it hard-blocks
+      // iOS Safari's back-swipe.
+      className="flex h-full min-h-screen bg-bg text-fg touch-pan-y md:touch-auto"
       onPointerDown={onGlobalPointerDown}
       onPointerMove={onGlobalPointerMove}
       onPointerUp={onGlobalPointerUp}

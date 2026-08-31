@@ -359,6 +359,17 @@ export const en = {
     imported: "Data imported.",
     exported: "Backup saved to your Downloads folder.",
     importBadFile: "That doesn't look like a QuestForge backup.",
+    updateTitle: "App updates",
+    updateBlurb:
+      "QuestForge checks for a new release automatically on start-up. You can also check right now.",
+    updateCheck: "Check for updates",
+    updateChecking: "Checking…",
+    updateUpToDate: "You are on the latest version.",
+    updateAvailable: "A new version {version} is available.",
+    updateInstall: "Install {version} and restart",
+    updateDownloading: "Downloading… {percent}%",
+    updateInstalling: "Installing… the app will restart in a moment.",
+    updateError: "Update failed",
     installTitle: "Install as an app",
     installBlurb:
       "Install QuestForge as a desktop app — it opens in its own window, starts from the Start menu / Dock, and keeps working offline.",

@@ -12,6 +12,12 @@ import { secretStore } from "@/services/ai/secretStore";
 import { soundService, SOUND_EVENTS, type SoundEvent } from "@/services/sound/soundService";
 import { exportData, importData, isBackupFile } from "@/services/system/dataTransfer";
 import { pwaInstall } from "@/services/system/pwaInstall";
+import {
+  canAutoUpdate,
+  checkForUpdate,
+  installAndRestart,
+  type UpdateStatus,
+} from "@/services/system/desktopUpdater";
 import { useToastStore } from "@/stores/toastStore";
 import { useSyncStore, checkServer, getServerPolicy, type ServerPolicy } from "@/stores/syncStore";
 
@@ -36,7 +42,9 @@ export function Settings() {
   const [baseUrl, setBaseUrl] = useState(DEFAULTS.baseUrl);
   const [apiKey, setApiKey] = useState("");
   const [thoroughness, setThoroughness] = useState(50);
-  const [agentMode, setAgentMode] = useState(false);
+  // Default checked to match the new server-side default. Only unset if the
+  // user has explicitly saved envelope mode before.
+  const [agentMode, setAgentMode] = useState(true);
   const [saved, setSaved] = useState(false);
 
   const [confirmText, setConfirmText] = useState("");
@@ -50,7 +58,8 @@ export function Settings() {
       setBaseUrl(all["ai.baseUrl"] ?? DEFAULTS.baseUrl);
       const th = Number(all["ai.thoroughness"]);
       setThoroughness(Number.isFinite(th) ? th : 50);
-      setAgentMode(all["ai.mode"] === "agent");
+      // Match the runtime default (aiService): agent unless user picked envelope.
+      setAgentMode(all["ai.mode"] !== "envelope");
     });
     setApiKey(secretStore.getApiKey() ?? "");
   }, [repos]);
@@ -113,6 +122,9 @@ export function Settings() {
 
       {/* Install as a PWA */}
       <InstallSection />
+
+      {/* Desktop auto-update (Tauri only — hidden on web). */}
+      <UpdateSection />
 
       {/* Daily goal & availability */}
       <GoalSettings />
@@ -745,6 +757,65 @@ function InstallSection() {
           </button>
         ) : (
           <p className="text-xs text-fg-3">{t("settings.installUnavailable")}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function UpdateSection() {
+  const t = useT();
+  const [status, setStatus] = useState<UpdateStatus>({ kind: "idle" });
+
+  // Only rendered on desktop (Tauri). Web/PWA users update through the service
+  // worker — nothing to expose here.
+  if (!canAutoUpdate()) return null;
+
+  async function check() {
+    await checkForUpdate((s) => setStatus(s));
+  }
+  async function install() {
+    await installAndRestart((s) => setStatus(s));
+  }
+
+  return (
+    <section className="qf-card mt-6 p-5">
+      <div className="qf-label">{t("settings.updateTitle")}</div>
+      <p className="mt-1 text-xs text-fg-3">{t("settings.updateBlurb")}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => void check()}
+          disabled={status.kind === "checking" || status.kind === "downloading" || status.kind === "installing"}
+          className="qf-btn-ghost text-sm"
+        >
+          {t("settings.updateCheck")}
+        </button>
+        {status.kind === "available" && (
+          <button
+            onClick={() => void install()}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+          >
+            {t("settings.updateInstall", { version: status.version })}
+          </button>
+        )}
+      </div>
+      <div className="mt-3 text-sm text-fg-2">
+        {status.kind === "checking" && t("settings.updateChecking")}
+        {status.kind === "up-to-date" && t("settings.updateUpToDate")}
+        {status.kind === "available" && (
+          <span>
+            {t("settings.updateAvailable", { version: status.version })}
+            {status.notes && (
+              <div className="mt-2 whitespace-pre-wrap rounded-md bg-surface-2 p-3 text-xs text-fg-2">
+                {status.notes}
+              </div>
+            )}
+          </span>
+        )}
+        {status.kind === "downloading" && t("settings.updateDownloading", { percent: status.percent })}
+        {status.kind === "installing" && t("settings.updateInstalling")}
+        {status.kind === "error" && (
+          <span className="text-danger">{t("settings.updateError")}: {status.message}</span>
         )}
       </div>
     </section>

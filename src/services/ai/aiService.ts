@@ -134,13 +134,35 @@ const PHANTOM_QUESTIONS_REGEX =
 const CLAIM_REGEX = new RegExp(
   "(" +
     "доба́?вил[аи]?|созда́?л[аи]?|обнови[лвш]|перен[её]с|поста́?вил[аи]?|запланирова[лвш]|распредели[лвш]|назначи[лвш]|помести[лвш]|" +
+    // Passive forms — "задачи добавлены", "создано", "записано", "готовы".
+    "добавлен[ыоа]?|создан[ыоа]?|записан[ыоа]?|записа[лвш]|удал[её]н[ыоа]?|выполнен[ыоа]?|" +
     "добавля[юе]|ста́?в(?:лю|ит)|созда(?:ю|[её]т)|обновля[юе]|планиру[юе]|распредел[юе]|распределя[юе]|назнача[юе]|помеща[юе]|" +
-    "готов[оа]\\b|сде́?лан[оаы]|выполне́?н[оаы]|" +
-    "added|created|updated|moved|scheduled|assigned|placed|completed|done|" +
-    "\\b(adding|setting|creating|updating|moving|scheduling|assigning|placing|completing)\\b" +
+    "готов[оаы]\\b|сде́?лан[оаы]|вы́полне́?н[оаы]|вс[её]\\s*на\\s*месте|" +
+    "added|created|updated|moved|scheduled|assigned|placed|completed|done|saved|recorded|" +
+    "\\b(adding|setting|creating|updating|moving|scheduling|assigning|placing|completing|saving)\\b" +
   ")",
   "i",
 );
+
+// ─── Intent gate (RU + EN) ──────────────────────────────────────────────────
+// Decides whether the current user message is a REQUEST to change data (so we
+// force the model to call a tool via toolChoice: "required") vs. a chat/question.
+// This is the load-bearing lever: instead of hoping the model picks a tool, we
+// tell the API "you MUST call at least one tool" — making "just write text"
+// technically impossible for that turn.
+const ACTION_INTENT =
+  /\b(добавь(?:те)?|добавить|создай(?:те)?|создать|запланируй(?:те)?|запланировать|перенеси(?:те)?|перенести|поставь(?:те)?|поставить|удали(?:те)?|удалить|заверши(?:те)?|завершить|выполни(?:те)?|разбей(?:те)?|разбить|привяжи(?:те)?|привязать|распредели(?:те)?|распределить|составь(?:те)?\s+план|напомни(?:те)?|запиши(?:те)?|распиши(?:те)?|add|create|schedule|plan|move|reschedule|delete|complete|finish|break\s*down|link|assign|distribute|set\s*up)\b/i;
+
+// Informational questions ("как добавить задачу?") — NOT a request to act.
+const QUESTION_LEAD =
+  /^(как|что|сколько|почему|зачем|куда|когда|какой|какая|какие|how|what|why|when|which|where|can|could|should)\b/i;
+
+function looksLikeActionRequest(text: string): boolean {
+  const s = text.trim();
+  if (!s) return false;
+  if (QUESTION_LEAD.test(s) && s.endsWith("?")) return false;
+  return ACTION_INTENT.test(s);
+}
 
 // ─── Agent-mode tool schemas ─────────────────────────────────────────────────
 // One tool per action type. Model MUST call a tool to change data — no more
@@ -494,7 +516,10 @@ export async function sendAIMessage(
 
   const all = await repos.settings.getAll();
   const thoroughness = Number(all["ai.thoroughness"]);
-  const mode: "envelope" | "agent" = all["ai.mode"] === "agent" ? "agent" : "envelope";
+  // Default to agent mode — envelope is the legacy JSON path kept only as an
+  // opt-in fallback. Agent is the reliable one now that intent gate + forced
+  // tool_choice + truthfulness guard are in place.
+  const mode: "envelope" | "agent" = all["ai.mode"] === "envelope" ? "envelope" : "agent";
   const context = await buildAIContext(repos);
 
   // When the user pinned an "active project" in the chat header, tell the model
@@ -587,7 +612,15 @@ export async function sendAIMessage(
   // through a function call — model physically cannot claim "готово" without
   // returning a real action object. Configured per user in Settings.
   if (mode === "agent") {
-    let reply = await provider.chat(messages, { tools: AI_TOOLS });
+    // Determined by the intent gate above. When true, we force the model to
+    // call at least one tool this turn — makes "just say добавил" impossible.
+    // ask_choices is in AI_TOOLS, so at high thoroughness the model can still
+    // satisfy the requirement by asking a clarifying questionnaire.
+    const forceTool = shouldNudge || looksLikeActionRequest(trimmed);
+    let reply = await provider.chat(messages, {
+      tools: AI_TOOLS,
+      toolChoice: forceTool ? "required" : "auto",
+    });
     let actions = toolCallsToActions(reply.toolCalls);
     let messageText = reply.text;
 
@@ -623,7 +656,10 @@ export async function sendAIMessage(
       };
       reply = await provider.chat(
         [...messages, correction, { role: "assistant", content: messageText }],
-        { tools: AI_TOOLS, toolChoice: "auto" },
+        // "required" here (was "auto"): the model already CLAIMED it acted, so
+        // this retry's whole job is to force a real tool call. Leaving it on
+        // auto let the model repeat the same fake claim.
+        { tools: AI_TOOLS, toolChoice: "required" },
       );
       actions = toolCallsToActions(reply.toolCalls);
       messageText =
@@ -743,6 +779,22 @@ export async function sendAIMessage(
     }
 
     const validated = validateActions(actions);
+
+    // TRUTHFULNESS FAIL-SAFE (agent mode). If we asked for a tool call (or the
+    // model still claimed "done"/"добавил"), but zero applyable actions came
+    // through — do NOT lie to the user with a bare success message. Prepend an
+    // explicit "nothing was created" warning so they can rephrase.
+    if (
+      validated.actions.length === 0 &&
+      (forceTool || CLAIM_REGEX.test(messageText))
+    ) {
+      const warn =
+        lang === "ru"
+          ? "⚠️ Не удалось сформировать изменения — ни одного действия не вернулось, поэтому ничего не создано. Попробуй переформулировать, например: «добавь задачу X на завтра»."
+          : "⚠️ I couldn't produce any changes this turn (no action was returned), so nothing was created. Try rephrasing, e.g. “add task X for tomorrow”.";
+      messageText = warn + (messageText ? "\n\n" + messageText : "");
+    }
+
     // If the model produced no text AND no actions, ask it to say something.
     const message =
       messageText.trim() ||
