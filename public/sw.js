@@ -5,6 +5,23 @@
 
 const CACHE = "qf-v1";
 
+// Belt: if a stale build registered this SW inside the Tauri app's WebView,
+// the origin will be tauri://localhost / https://tauri.localhost / etc. In
+// that case, unregister ourselves and skip every request so we can't serve a
+// stale bundle. Real PWA browsers use http/https origins.
+const IS_TAURI_ORIGIN = /(^tauri:)|(\/\/tauri\.localhost)|(\/\/tauri\.localhost:)/i.test(self.location.origin);
+if (IS_TAURI_ORIGIN) {
+  self.addEventListener("install", () => self.skipWaiting());
+  self.addEventListener("activate", (event) => {
+    event.waitUntil((async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+      await self.registration.unregister();
+    })());
+  });
+  // Never intercept fetches — let the WebView load its bundle directly.
+} else {
+
 self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
@@ -58,3 +75,5 @@ self.addEventListener("fetch", (event) => {
     })(),
   );
 });
+
+} // end !IS_TAURI_ORIGIN block
